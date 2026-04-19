@@ -103,6 +103,30 @@ class ReservationController extends Controller
         }
     }
 
+    public function success($id)
+    {
+        $reservation = Reservation::with('table')->where('booking_code', $id)->firstOrFail();
+        
+        // Security Focus: Arahkan ke halaman pending jika belum paid
+        if (!in_array($reservation->payment_status, ['paid', 'settlement'])) {
+            return redirect()->route('reserve.pending', $id);
+        }
+
+        return view('reservation.success', compact('reservation'));
+    }
+
+    public function pending($id)
+    {
+        $reservation = Reservation::where('booking_code', $id)->firstOrFail();
+        
+        // Jika ternyata sudah dibayar, lempar kembali ke halaman success
+        if (in_array($reservation->payment_status, ['paid', 'settlement'])) {
+            return redirect()->route('reserve.success', $id);
+        }
+
+        return view('reservation.pending', compact('reservation'));
+    }
+
     public function adminIndex()
     {
         $reservations = Reservation::with('table')->orderBy('reservation_date', 'asc')->get();

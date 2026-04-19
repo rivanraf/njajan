@@ -1,5 +1,6 @@
 <x-layout title="Njajan | Beranda">
     <script src="{{ env('MIDTRANS_IS_PRODUCTION') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
+    
     {{-- Custom Animations --}}
     <style>
         @keyframes fadeInUp {
@@ -18,18 +19,11 @@
     <main class="w-full min-h-screen bg-gray-50 flex flex-col relative overflow-y-auto overflow-x-hidden pb-32 no-scrollbar">
         
         {{-- NAVBAR --}}
-        <nav class="bg-white/80 backdrop-blur-md fixed top-0 w-full max-w-md z-50 border-b border-gray-100">
+        <nav class="bg-white fixed top-0 w-full max-w-md z-50 border-b border-gray-100">
             <div class="flex items-center justify-between mx-auto p-4">
                 <a href="{{ url('/') }}" class="flex items-center space-x-2">
-                    <span class="text-xl font-black italic tracking-tighter text-[#0b0b45]">NJAJAN</span>
+                    <span class="text-xl font-black tracking-tighter text-[#0b0b45]">NJAJAN</span>
                 </a>
-                <div class="flex items-center gap-3">
-                    <button type="button" class="inline-flex items-center justify-center p-2 w-9 h-9 text-gray-500 rounded-xl hover:bg-gray-50">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
-                        </svg>
-                    </button>
-                </div>
             </div>
         </nav>
 
@@ -38,10 +32,10 @@
         {{-- HERO BRANDING --}}
         <section class="px-6 pt-10 pb-6 animate-fade-in-up">
             <x-text variant="h1" class="text-4xl font-black tracking-tighter text-gray-900 leading-[1.1]">
-                Pesan Meja,<br><span class="text-[#FF4647]">Tanpa Antre.</span>
+                Pesan Meja,<span class="text-[#FF4647]">Tanpa Antre.</span>
             </x-text>
-            <x-text variant="body" color="secondary" class="mt-3 text-sm leading-relaxed">
-                Nikmati suasana Njajan Cafe tanpa pusing cari kursi. Booking meja favoritmu sekarang juga.
+            <x-text variant="body" color="secondary" class="mt-3 text-sm leading-relaxed font-medium">
+                Nikmati suasana Njajan kantin tanpa pusing cari kursi. Booking meja favoritmu sekarang juga.
             </x-text>
         </section>
 
@@ -55,10 +49,12 @@
                 <div class="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-3 shadow-lg shadow-green-200">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                 </div>
-                <x-text variant="h3" class="text-green-900 font-black">Booking Berhasil!</x-text>
-                <x-text variant="caption" class="text-green-700 block mt-1 mb-4">Tunjukkan kode ini saat tiba di lokasi:</x-text>
+                <x-text variant="h3" color="primary" class="font-black">Booking Berhasil!</x-text>
+                <x-text variant="caption" color="secondary" class="block mt-1 mb-4 font-bold">Tunjukkan kode ini saat tiba di lokasi:</x-text>
                 <div class="bg-white py-4 rounded-2xl border-2 border-dashed border-green-200">
-                    <span class="text-3xl font-black tracking-[0.2em] text-gray-900 uppercase">{{ $successCode }}</span>
+                    <x-text variant="h1" class="text-3xl font-black tracking-[0.2em] text-gray-900 uppercase">
+                        {{ $successCode }}
+                    </x-text>
                 </div>
             </div>
             @endif
@@ -70,35 +66,41 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                 </div>
                 <div>
-                    <x-text variant="h4" class="text-red-900 font-black text-sm">Meja Tidak Tersedia</x-text>
-                    <x-text variant="caption" class="text-red-700 block leading-tight">{{ session('error') }}</x-text>
+                    <x-text variant="h4" color="primary" class="font-black text-sm">Meja Tidak Tersedia</x-text>
+                    <x-text variant="caption" color="secondary" class="block leading-tight font-bold">{{ session('error') }}</x-text>
                 </div>
             </div>
             @endif
 
             {{-- FORM CARD --}}
-            <section class="bg-white border border-gray-100 rounded-[2.5rem] p-6 shadow-2xl shadow-gray-200/40 animate-fade-in-up delay-100">
+            <section class="bg-white border border-gray-100 rounded-lg p-6 shadow-2xl shadow-gray-200/40 animate-fade-in-up delay-100">
                 <form id="reservationForm" action="{{ route('reserve.store') }}" method="POST" class="space-y-5">
                     @csrf
                     
                     {{-- Nama --}}
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Nama Lengkap</label>
+                        <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
+                            Nama Lengkap
+                        </x-text>
                         <input type="text" name="name" required placeholder="Budi Santoso" 
-                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
                     </div>
 
                     {{-- WhatsApp --}}
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">No. WhatsApp</label>
+                        <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
+                            No. WhatsApp
+                        </x-text>
                         <input type="number" name="whatsapp" required placeholder="0812..." 
-                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
                     </div>
 
                     {{-- Meja (Database Dynamic) --}}
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Pilih Meja</label>
-                        <select name="table_id" required class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                        <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
+                            Pilih Meja
+                        </x-text>
+                        <select name="table_id" required class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
                             <option value="" disabled selected>Klik untuk pilih meja</option>
                             @foreach($tables as $table)
                                 <option value="{{ $table->id }}">Meja {{ $table->number }} (Kapasitas: {{ $table->capacity }} Orang)</option>
@@ -109,13 +111,17 @@
                     {{-- Tanggal & Jam --}}
                     <div class="grid grid-cols-2 gap-3">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Tanggal</label>
+                            <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
+                                Tanggal
+                            </x-text>
                             <input type="date" name="reservation_date" required min="{{ date('Y-m-d') }}"
-                                class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                                class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Jam</label>
-                            <select name="reservation_time" required class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                            <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
+                                Jam
+                            </x-text>
+                            <select name="reservation_time" required class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
                                 <option value="10:00">10:00</option>
                                 <option value="13:00">13:00</option>
                                 <option value="16:00">16:00</option>
@@ -127,14 +133,16 @@
 
                     {{-- Jumlah Tamu --}}
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Jumlah Tamu</label>
+                        <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
+                            Jumlah Tamu
+                        </x-text>
                         <input type="number" name="guests" required min="1" max="10" placeholder="1-10 orang" 
-                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
                     </div>
 
-                    <button type="submit" class="w-full bg-[#FF4647] text-white font-black py-4 rounded-2xl shadow-xl shadow-red-200 active:scale-95 transition-all tracking-tighter mt-4">
-                        BOOKING SEKARANG
-                    </button>
+                    <x-button type="submit" variant="primary" class="w-full font-black py-4 rounded-2xl active:scale-95 transition-all tracking-tighter mt-4 !shadow-none">
+                        Booking Sekarang
+                    </x-button>
                 </form>
             </section>
         </div>
@@ -172,15 +180,12 @@
                     return;
                 }
 
-                // Munculkan popup Snap Midtrans
                 window.snap.pay(result.snap_token, {
                     onSuccess: function(checkResult) {
-                        // Redirect atau tampilkan alert sukses (memanfaatkan session via redirect)
-                        window.location.href = "{{ url('/') }}?success_booking=" + result.booking_code;
+                        window.location.href = "{{ url('/reserve/success') }}/" + result.booking_code;
                     },
                     onPending: function(checkResult) {
-                        alert("Pembayaran tertunda. Silakan selesaikan pembayaran Anda sesuai instruksi.");
-                        window.location.href = "{{ url('/') }}?success_booking=" + result.booking_code;
+                        window.location.href = "{{ url('/reserve/pending') }}/" + result.booking_code;
                     },
                     onError: function(checkResult) {
                         alert("Pembayaran gagal!");
@@ -188,9 +193,7 @@
                         submitBtn.innerText = originalText;
                     },
                     onClose: function () {
-                        alert("Anda menutup halaman pembayaran. Silakan selesaikan pembayaran sesuai instruksi batas waktu yang ditentukan. Jika tidak, reservasi Anda akan otomatis hangus!");
-                        // Tetap arahkan ke sukses agar mereka dapat melihat kodenya
-                        window.location.href = "{{ url('/') }}?success_booking=" + result.booking_code;
+                        window.location.href = "{{ url('/reserve/pending') }}/" + result.booking_code;
                     }
                 });
 

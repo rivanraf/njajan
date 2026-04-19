@@ -13,6 +13,8 @@ use App\Http\Controllers\OrderController as CustomerOrderController;
 // =============================================
 Route::get('/', [ReservationController::class, 'index'])->name('landing');
 Route::post('/reserve/store', [ReservationController::class, 'store'])->name('reserve.store');
+Route::get('/reserve/success/{id}', [ReservationController::class, 'success'])->name('reserve.success');
+Route::get('/reserve/pending/{id}', [ReservationController::class, 'pending'])->name('reserve.pending');
 
 
 // =============================================
