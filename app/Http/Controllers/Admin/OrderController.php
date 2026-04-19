@@ -64,4 +64,20 @@ class OrderController extends Controller
 
         return redirect()->back()->with('success', 'Pesanan #' . $order->id . ' berhasil diupdate!');
     }
+
+    public function report(Request $request)
+{
+    // Ambil filter tanggal (default hari ini)
+    $date = $request->get('date', date('Y-m-d'));
+
+    // Query menggunakan nama kolom yang benar sesuai foto phpMyAdmin kamu
+    $orders = \App\Models\Order::whereDate('created_at', $date)
+                ->where('payment_status', 'paid') // Menggunakan 'payment_status' dan 'paid'
+                ->get();
+
+    // Hitung total pendapatan dari data yang sudah difilter
+    $totalRevenue = $orders->sum('total_price');
+
+    return view('admin.report.index', compact('orders', 'totalRevenue', 'date'));
+}
 }

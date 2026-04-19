@@ -23,9 +23,17 @@
                             {{ __('Kelola Karyawan') }}
                         </x-nav-link>
                     @endif
+                    @if(Auth::user()->role == 'admin')
+                        <x-nav-link :href="route('admin.report.index')" :active="request()->routeIs('admin.report.index')">
+                            {{ __('Laporan Pendapatan') }}
+                        </x-nav-link>
+                    @endif
 
                     <x-nav-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.*')">
                         {{ __('Daftar Pesanan') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('admin.reservations.index')" :active="request()->routeIs('admin.reservations.*')">
+                        {{ __('Reservasi Meja') }}
                     </x-nav-link>
                 </div>
             </div> <div class="hidden sm:flex sm:items-center sm:ms-6">
@@ -89,6 +97,9 @@
             
             <x-responsive-nav-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.*')">
                 {{ __('Daftar Pesanan') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.reservations.index')" :active="request()->routeIs('admin.reservations.*')">
+                {{ __('Reservasi Meja') }}
             </x-responsive-nav-link>
         </div>
 

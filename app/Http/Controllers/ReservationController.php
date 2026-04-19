@@ -3,28 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
-use App\Models\Table; // Kita butuh ini untuk ambil daftar meja
+use App\Models\Table;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class ReservationController extends Controller
 {
-    /**
-     * Menampilkan Form Reservasi di Landing Page
-     */
     public function index()
     {
-        // Ambil semua meja agar user bisa memilih meja mana yang mau di-booking
         $tables = Table::all();
         return view('welcome', compact('tables'));
     }
 
-    /**
-     * Menyimpan Data Reservasi
-     */
     public function store(Request $request)
     {
-        // 1. Validasi Input
+        // 1. Validasi Input Dasar
         $request->validate([
             'name' => 'required|string|max:255',
             'whatsapp' => 'required|numeric',
@@ -34,11 +29,31 @@ class ReservationController extends Controller
             'guests' => 'required|integer|min:1',
         ]);
 
-        // 2. Logika Generate Kode Booking Unik (Contoh: NJN-ABC12)
-        $bookingCode = 'NJN-' . strtoupper(Str::random(5));
+        // --- MULAI LOGIKA ANTI-BUG (PENCEGAHAN BENTROK) ---
+        
+        // Cek apakah meja tersebut sudah dipesan di tanggal & jam yang sama
+        // Kita hanya memblokir jika statusnya 'pending' atau 'confirmed'
+        $isBooked = Reservation::where('table_id', $request->table_id)
+            ->where('reservation_date', $request->reservation_date)
+            ->where('reservation_time', $request->reservation_time)
+            ->whereIn('status', ['pending', 'confirmed']) 
+            ->exists();
+
+        if ($isBooked) {
+            // Jika bentrok, hentikan proses dan lempar pesan error JSON
+            return response()->json([
+                'success' => false,
+                'message' => 'Maaf, Meja ' . $request->table_id . ' sudah dipesan untuk jadwal tersebut. Silakan pilih waktu atau meja lain.'
+            ], 400);
+        }
+
+        // --- SELESAI LOGIKA ANTI-BUG ---
+
+        // 2. Logika Generate Kode Booking Unik
+        $bookingCode = 'BOOKING-' . strtoupper(Str::random(5));
 
         // 3. Simpan ke Database
-        Reservation::create([
+        $reservation = Reservation::create([
             'booking_code' => $bookingCode,
             'name' => $request->name,
             'whatsapp' => $request->whatsapp,
@@ -46,26 +61,54 @@ class ReservationController extends Controller
             'reservation_date' => $request->reservation_date,
             'reservation_time' => $request->reservation_time,
             'guests' => $request->guests,
-            'status' => 'pending', // Status awal selalu pending
+            'status' => 'pending',
+            'payment_status' => 'pending'
         ]);
 
-        // 4. Kirim kode booking ke halaman sukses via Session
-        return redirect()->back()->with('success_booking', $bookingCode);
+        // 4. Konfigurasi Midtrans & Request Snap Token
+        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        \Midtrans\Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        \Midtrans\Config::$isSanitized = env('MIDTRANS_IS_SANITIZED', true);
+        \Midtrans\Config::$is3ds = env('MIDTRANS_IS_3DS', true);
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $bookingCode,
+                'gross_amount' => 20000,
+            ],
+            'customer_details' => [
+                'first_name' => $request->name,
+                'phone' => $request->whatsapp,
+            ],
+        ];
+
+        try {
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            
+            // Simpan snap_token ke database
+            $reservation->snap_token = $snapToken;
+            $reservation->save();
+
+            return response()->json([
+                'success' => true,
+                'snap_token' => $snapToken,
+                'booking_code' => $bookingCode
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal terhubung ke Midtrans: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Menampilkan daftar reservasi di Dashboard Admin/Kasir
-     */
     public function adminIndex()
     {
-        // Reservation::with('table') agar tidak boros query (Eager Loading)
         $reservations = Reservation::with('table')->orderBy('reservation_date', 'asc')->get();
         return view('admin.reservations.index', compact('reservations'));
     }
 
-    /**
-     * Update status reservasi (Pending -> Confirmed/Check-in -> Cancelled)
-     */
     public function updateStatus(Request $request, $id)
     {
         $reservation = Reservation::findOrFail($id);
@@ -74,5 +117,48 @@ class ReservationController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Status reservasi meja ' . $reservation->booking_code . ' berhasil diperbarui.');
+    }
+
+    /**
+     * Form Edit untuk Owner
+     */
+    public function edit($id)
+    {
+        $reservation = Reservation::findOrFail($id);
+        $tables = \App\Models\Table::all(); 
+        return view('admin.reservations.edit', compact('reservation', 'tables'));
+    }
+
+    /**
+     * Proses Update Data oleh Owner
+     */
+    // Menyimpan perubahan dari form edit
+public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'whatsapp' => 'required',
+            'table_id' => 'required|exists:tables,id',
+            'reservation_date' => 'required|date',
+            'reservation_time' => 'required',
+            'status' => 'required|in:pending,confirmed,cancelled',
+        ]);
+
+        $reservation = Reservation::findOrFail($id);
+        $reservation->update($request->all());
+
+        return redirect()->route('admin.reservations.index')
+            ->with('success', 'Data reservasi ' . $reservation->booking_code . ' berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus Data Permanen (Hanya Owner/Admin)
+     */
+    public function destroy($id)
+    {
+        $reservation = Reservation::findOrFail($id);
+        $reservation->delete();
+
+        return redirect()->back()->with('success', 'Data reservasi telah dihapus permanen.');
     }
 }

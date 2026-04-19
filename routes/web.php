@@ -59,7 +59,7 @@ Route::middleware(['auth', 'verified', 'role:admin,kasir'])->group(function () {
     Route::patch('/admin/orders/{id}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.update');
     Route::get('/admin/orders/{id}/print', [AdminOrderController::class, 'print'])->name('admin.orders.print');
     Route::get('/admin/reservations', [ReservationController::class, 'adminIndex'])->name('admin.reservations.index');
-    Route::patch('/admin/reservations/{id}/status', [ReservationController::class, 'updateStatus'])->name('admin.reservations.update');
+    Route::patch('/admin/reservations/{id}/status', [ReservationController::class, 'updateStatus'])->name('admin.reservations.updateStatus');
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
@@ -83,6 +83,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/admin/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
     Route::post('/admin/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
     Route::delete('/admin/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
+
+    // Reservation Management (Owner)
+    Route::get('/admin/reservations/{id}/edit', [ReservationController::class, 'edit'])->name('admin.reservations.edit');
+    Route::put('/admin/reservations/{id}', [ReservationController::class, 'update'])->name('admin.reservations.update');
+    Route::delete('/admin/reservations/{id}', [ReservationController::class, 'destroy'])->name('admin.reservations.destroy');
+
+    //report
+    Route::get('/admin/report', [AdminOrderController::class, 'report'])->name('admin.report.index');
 });
 
 Route::get('/order/track/{id}', [\App\Http\Controllers\OrderController::class, 'track'])->name('order.track');

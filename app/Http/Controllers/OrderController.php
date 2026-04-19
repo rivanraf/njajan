@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Menu;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\Reservation;
 use Midtrans\Config;
 use Midtrans\Snap;
 
@@ -22,6 +23,28 @@ class OrderController extends Controller
             // Cegah akses jika meja dilarang (nonaktif)
             if ($table && $table->status === 'nonaktif') {
                 return redirect('/')->with('error', 'Meja ini sedang tidak bisa digunakan.');
+            }
+
+            // Validasi Status Reservasi Harian (Pre-Check)
+            if ($table) {
+                $now = \Carbon\Carbon::now();
+                
+                $activeReservation = Reservation::where('table_id', $table->id)
+                    ->where('reservation_date', $now->toDateString())
+                    ->where('status', 'pending')
+                    ->get()
+                    ->filter(function ($reservation) use ($now) {
+                        $resTime = \Carbon\Carbon::parse($reservation->reservation_time);
+                        $startTime = $resTime->copy()->subMinutes(30);
+                        $endTime = $resTime->copy()->addMinutes(30);
+                        
+                        return $now->between($startTime, $endTime);
+                    })
+                    ->first();
+
+                if ($activeReservation) {
+                    return redirect('/')->with('error', 'Meja ini sedang di-booking dan tidak bisa digunakan untuk pesanan mandiri saat ini.');
+                }
             }
             
             // 2. Jika meja ditemukan, simpan id dan number ke dalam Session
@@ -294,6 +317,30 @@ class OrderController extends Controller
 
         if ($expectedSignature !== $incomingSignature) {
             return response()->json(['message' => 'Invalid signature'], 403);
+        }
+
+        // CEK APAKAH INI NOTIFIKASI RESERVASI ATAU ORDER BIASA
+        if (\Illuminate\Support\Str::startsWith($orderId, 'BOOKING-')) {
+            $reservation = \App\Models\Reservation::where('booking_code', $orderId)->first();
+            if (!$reservation) {
+                return response()->json(['message' => 'Reservasi tidak ditemukan'], 404);
+            }
+
+            $transactionStatus = $notification['transaction_status'] ?? '';
+            if (in_array($transactionStatus, ['settlement', 'capture'])) {
+                $reservation->payment_status = 'paid';
+                // Anda juga bisa menyesuaikan status kedatangan jika perlu, misal: status = 'confirmed'
+                $reservation->status = 'confirmed'; 
+            } elseif ($transactionStatus === 'expire') {
+                $reservation->payment_status = 'expired';
+                $reservation->status = 'cancelled';
+            } elseif ($transactionStatus === 'cancel') {
+                $reservation->payment_status = 'cancelled';
+                $reservation->status = 'cancelled';
+            }
+            
+            $reservation->save();
+            return response()->json(['message' => 'Notifikasi reservasi diproses'], 200);
         }
 
         // 3. Parse Order ID dari format "NJN-{id}-{timestamp}"
