@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Carbon\Carbon; // Pastikan Carbon di-import
 
 class ReservationController extends Controller
 {
@@ -29,10 +30,21 @@ class ReservationController extends Controller
             'guests' => 'required|integer|min:1',
         ]);
 
+        // --- TAMBALAN LOGIKA: VALIDASI WAKTU REAL-TIME ---
+        
+        // Gabungkan tanggal dan jam input menjadi satu objek Carbon
+        $inputDateTime = Carbon::parse($request->reservation_date . ' ' . $request->reservation_time);
+        
+        // Cek apakah waktu yang dipilih sudah lewat dari waktu server saat ini
+        if ($inputDateTime->isPast()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Waktu reservasi tidak valid. Jam ' . $request->reservation_time . ' untuk hari ini sudah terlewati.'
+            ], 400);
+        }
+
         // --- MULAI LOGIKA ANTI-BUG (PENCEGAHAN BENTROK) ---
         
-        // Cek apakah meja tersebut sudah dipesan di tanggal & jam yang sama
-        // Kita hanya memblokir jika statusnya 'pending' atau 'confirmed'
         $isBooked = Reservation::where('table_id', $request->table_id)
             ->where('reservation_date', $request->reservation_date)
             ->where('reservation_time', $request->reservation_time)
@@ -40,7 +52,6 @@ class ReservationController extends Controller
             ->exists();
 
         if ($isBooked) {
-            // Jika bentrok, hentikan proses dan lempar pesan error JSON
             return response()->json([
                 'success' => false,
                 'message' => 'Maaf, Meja ' . $request->table_id . ' sudah dipesan untuk jadwal tersebut. Silakan pilih waktu atau meja lain.'
@@ -85,7 +96,6 @@ class ReservationController extends Controller
         try {
             $snapToken = \Midtrans\Snap::getSnapToken($params);
             
-            // Simpan snap_token ke database
             $reservation->snap_token = $snapToken;
             $reservation->save();
 
@@ -106,24 +116,18 @@ class ReservationController extends Controller
     public function success($id)
     {
         $reservation = Reservation::with('table')->where('booking_code', $id)->firstOrFail();
-        
-        // Security Focus: Arahkan ke halaman pending jika belum paid
         if (!in_array($reservation->payment_status, ['paid', 'settlement'])) {
             return redirect()->route('reserve.pending', $id);
         }
-
         return view('reservation.success', compact('reservation'));
     }
 
     public function pending($id)
     {
         $reservation = Reservation::where('booking_code', $id)->firstOrFail();
-        
-        // Jika ternyata sudah dibayar, lempar kembali ke halaman success
         if (in_array($reservation->payment_status, ['paid', 'settlement'])) {
             return redirect()->route('reserve.success', $id);
         }
-
         return view('reservation.pending', compact('reservation'));
     }
 
@@ -139,13 +143,9 @@ class ReservationController extends Controller
         $reservation->update([
             'status' => $request->status
         ]);
-
         return redirect()->back()->with('success', 'Status reservasi meja ' . $reservation->booking_code . ' berhasil diperbarui.');
     }
 
-    /**
-     * Form Edit untuk Owner
-     */
     public function edit($id)
     {
         $reservation = Reservation::findOrFail($id);
@@ -153,11 +153,7 @@ class ReservationController extends Controller
         return view('admin.reservations.edit', compact('reservation', 'tables'));
     }
 
-    /**
-     * Proses Update Data oleh Owner
-     */
-    // Menyimpan perubahan dari form edit
-public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -175,14 +171,10 @@ public function update(Request $request, $id)
             ->with('success', 'Data reservasi ' . $reservation->booking_code . ' berhasil diperbarui.');
     }
 
-    /**
-     * Hapus Data Permanen (Hanya Owner/Admin)
-     */
     public function destroy($id)
     {
         $reservation = Reservation::findOrFail($id);
         $reservation->delete();
-
         return redirect()->back()->with('success', 'Data reservasi telah dihapus permanen.');
     }
 }

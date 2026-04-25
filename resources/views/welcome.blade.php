@@ -22,7 +22,7 @@
         <nav class="bg-white fixed top-0 w-full max-w-md z-50 border-b border-gray-100">
             <div class="flex items-center justify-between mx-auto p-4">
                 <a href="{{ url('/') }}" class="flex items-center space-x-2">
-                    <span class="text-xl font-black tracking-tighter text-[#0b0b45]">NJAJAN</span>
+                    <span class="text-xl font-black tracking-tighter text-[#0b0b45]">Njajan.co</span>
                 </a>
             </div>
         </nav>
@@ -78,69 +78,85 @@
                     @csrf
                     
                     {{-- Nama --}}
-                    <div class="space-y-1">
-                        <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
-                            Nama Lengkap
-                        </x-text>
-                        <input type="text" name="name" required placeholder="Budi Santoso" 
-                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                    <div class="space-y-1.5">
+                        <label for="name" class="block">
+                            <x-text variant="caption" color="secondary" class="text-[10px] font-black capitalize tracking-widest ml-4 mb-1">
+                                Nama Lengkap
+                            </x-text>
+                            <input type="text" id="name" name="name" required placeholder="Budi Santoso" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3.5 text-sm font-bold text-gray-900 placeholder:text-gray-400 placeholder:font-normal focus:border-[#FF4647] focus:ring-4 focus:ring-[#FF4647]/10 focus:bg-white focus:outline-none shadow-none transition-all duration-300">
+                        </label>
                     </div>
 
                     {{-- WhatsApp --}}
-                    <div class="space-y-1">
-                        <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
-                            No. WhatsApp
-                        </x-text>
-                        <input type="number" name="whatsapp" required placeholder="0812..." 
-                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                    <div class="space-y-1.5">
+                        <label for="whatsapp" class="block">
+                            <x-text variant="caption" color="secondary" class="text-[10px] font-black capitalize tracking-widest ml-4 mb-1">
+                                No. WhatsApp
+                            </x-text>
+                            <input type="number" id="whatsapp" name="whatsapp" required placeholder="0812..." class="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3.5 text-sm font-bold text-gray-900 placeholder:text-gray-400 placeholder:font-normal focus:border-[#FF4647] focus:ring-4 focus:ring-[#FF4647]/10 focus:bg-white focus:outline-none shadow-none transition-all duration-300">
+                        </label>
                     </div>
 
                     {{-- Meja (Database Dynamic) --}}
-                    <div class="space-y-1">
-                        <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
-                            Pilih Meja
-                        </x-text>
-                        <select name="table_id" required class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
-                            <option value="" disabled selected>Klik untuk pilih meja</option>
-                            @foreach($tables as $table)
-                                <option value="{{ $table->id }}">Meja {{ $table->number }} (Kapasitas: {{ $table->capacity }} Orang)</option>
-                            @endforeach
-                        </select>
+                    <div class="space-y-1.5">
+                        <label for="table_id" class="block">
+                            <x-text variant="caption" color="secondary" class="text-[10px] font-black capitalize tracking-widest ml-4 mb-1">
+                                Pilih Meja
+                            </x-text>
+                            <select id="table_id" name="table_id" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3.5 text-sm font-bold text-gray-900 focus:border-[#FF4647] focus:ring-4 focus:ring-[#FF4647]/10 focus:bg-white focus:outline-none shadow-none transition-all duration-300 appearance-none cursor-pointer">
+                                <option value="" disabled selected>Klik untuk pilih meja</option>
+                                @foreach($tables as $table)
+                                    <option value="{{ $table->id }}">Meja {{ $table->number }} (Kapasitas: {{ $table->capacity }} Orang)</option>
+                                @endforeach
+                            </select>
+                        </label>
                     </div>
 
                     {{-- Tanggal & Jam --}}
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1">
-                            <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
-                                Tanggal
-                            </x-text>
-                            <input type="date" name="reservation_date" required min="{{ date('Y-m-d') }}"
-                                class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                        {{-- Input Tanggal --}}
+                        <div class="space-y-1.5">
+
+                            <label for="reservation_date" class="block">
+
+                                <x-text variant="caption" color="secondary" class="text-[10px] font-black capitalize tracking-widest ml-4 mb-1">
+                                    Tanggal
+                                </x-text>
+
+                                <input type="date" id="reservation_date" name="reservation_date" required min="{{ date('Y-m-d') }}" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3.5 text-sm font-bold text-gray-900 focus:border-[#FF4647] focus:ring-4 focus:ring-[#FF4647]/10 focus:bg-white focus:outline-none shadow-none transition-all duration-300">
+
+                            </label>
+
                         </div>
-                        <div class="space-y-1">
-                            <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
-                                Jam
-                            </x-text>
-                            <select name="reservation_time" required class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
-                                <option value="10:00">10:00</option>
-                                <option value="13:00">13:00</option>
-                                <option value="16:00">16:00</option>
-                                <option value="19:00">19:00</option>
-                                <option value="20:00">20:00</option>
-                            </select>
+
+                        {{-- Input Jam --}}
+                        <div class="space-y-1.5">
+                            <label for="reservation_time" class="block">
+                                <x-text variant="caption" color="secondary" class="text-[10px] font-black capitalize tracking-widest ml-4 mb-1">
+                                    Jam
+                                </x-text>
+                                <select id="reservation_time" name="reservation_time" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3.5 text-sm font-bold text-gray-900 focus:border-[#FF4647] focus:ring-4 focus:ring-[#FF4647]/10 focus:bg-white focus:outline-none shadow-none transition-all duration-300 appearance-none cursor-pointer">
+                                    <option value="10:00">10:00</option>
+                                    <option value="13:00">13:00</option>
+                                    <option value="16:00">16:00</option>
+                                    <option value="19:00">19:00</option>
+                                    <option value="20:00">20:00</option>
+                                </select>
+                            </label>
                         </div>
                     </div>
 
                     {{-- Jumlah Tamu --}}
-                    <div class="space-y-1">
-                        <x-text variant="caption" color="secondary" class="text-[10px] font-black uppercase tracking-widest ml-4">
-                            Jumlah Tamu
-                        </x-text>
-                        <input type="number" name="guests" required min="1" max="10" placeholder="1-10 orang" 
-                            class="w-full bg-gray-50 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FF4647]/20 focus:bg-white transition-all">
+                    <div class="space-y-1.5">
+                        <label for="guests" class="block">
+                            <x-text variant="caption" color="secondary" class="text-[10px] font-black capitalize tracking-widest ml-4 mb-1">
+                                Jumlah Tamu
+                            </x-text>
+                            <input type="number" id="guests" name="guests" required min="1" max="10" placeholder="1-10 orang" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-5 py-3.5 text-sm font-bold text-gray-900 placeholder:text-gray-400 placeholder:font-normal focus:border-[#FF4647] focus:ring-4 focus:ring-[#FF4647]/10 focus:bg-white focus:outline-none shadow-none transition-all duration-300">
+                        </label>
                     </div>
 
-                    <x-button type="submit" variant="primary" class="w-full font-black py-4 rounded-2xl active:scale-95 transition-all tracking-tighter mt-4 !shadow-none">
+                    <x-button type="submit" variant="primary" class="w-full font-black py-4 rounded-lg active:scale-95 transition-all tracking-tighter mt-4 !shadow-none">
                         Booking Sekarang
                     </x-button>
                 </form>

@@ -8,8 +8,8 @@
                w-[max-content] max-w-[90vw] 
                px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.5rem,2vw,0.75rem)] 
                /* VISUAL STYLE */
-               bg-white/90 backdrop-blur-md border border-green-100 
-               rounded-[clamp(0.75rem,2vw,1rem)] shadow-lg 
+               bg-white shadow-md border border-gray-100 
+               rounded-[clamp(0.75rem,2vw,1rem)] 
                /* ANIMATION BASE */
                transition-all duration-500 transform scale-100 opacity-100">
         

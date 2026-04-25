@@ -24,24 +24,24 @@
                 {{-- Card Info --}}
                 <div class="bg-white rounded-lg border border-gray-100 p-5 shadow-sm space-y-4">
                     <div class="flex justify-between items-center pb-4 border-b border-gray-50">
-                        <x-text variant="caption" color="secondary" class="font-bold uppercase tracking-widest text-[10px]">Total Tagihan</x-text>
-                        <x-text variant="h3" class="text-[#FF4647]">Rp20.000</x-text>
+                        <x-text variant="caption" color="secondary" class="font-bold capitalize text-xs">Total Tagihan</x-text>
+                        <x-text variant="caption" color="primary" class="!font-bold">Rp20.000</x-text>
                     </div>
                     <div class="space-y-2">
                         <div class="flex justify-between">
-                            <span class="text-xs text-gray-500 font-medium">Kode Booking</span>
-                            <span class="text-xs text-gray-900 font-bold">{{ $reservation->booking_code }}</span>
+                            <x-text variant="caption" color="secondary" class="font-medium">Kode Booking</x-text>
+                            <x-text variant="caption" color="primary" class="font-bold uppercase">{{ $reservation->booking_code }}</x-text>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-xs text-gray-500 font-medium">Batas Waktu</span>
-                            <span class="text-xs text-gray-900 font-bold">15 Menit</span>
+                            <x-text variant="caption" color="secondary" class="font-medium">Batas Waktu</x-text>
+                            <x-text variant="caption" color="primary" class="font-bold">15 Menit</x-text>
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-red-50 p-4 rounded-lg flex items-start gap-3 border border-red-100/50">
                     <svg class="w-5 h-5 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <x-text variant="caption" class="text-red-800 leading-relaxed text-[11px]">
+                    <x-text variant="caption" class="text-red-800 leading-relaxed !font-semibold">
                         Jika pembayaran tidak diselesaikan, sistem akan membatalkan reservasi ini secara otomatis.
                     </x-text>
                 </div>
@@ -54,9 +54,9 @@
                     Lanjutkan Pembayaran
                 </x-button>
 
-                <button type="button" onclick="window.location.href='{{ url('/') }}'" class="w-full flex items-center justify-center h-[52px] rounded-lg transition active:scale-95 bg-transparent border border-red-100 text-[#FF4647] hover:bg-red-50 font-semibold">
+                <x-button type="button" onclick="window.location.href='{{ url('/') }}'" variant="secondary" class="w-full flex items-center justify-center h-[52px] rounded-lg transition active:scale-95 bg-transparent border border-red-100 text-[#FF4647] hover:bg-red-50 font-semibold">
                     Batalkan & Kembali
-                </button>
+                </x-button>
             </div>
 
         </main>

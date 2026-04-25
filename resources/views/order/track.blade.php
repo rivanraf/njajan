@@ -36,17 +36,71 @@
             </div>
 
             {{-- Alert Info Box --}}
-            <div class="w-full bg-blue-50 border border-blue-100 rounded-xl px-2 py-3 flex gap-3 items-center mb-8">
+            <div class="w-full bg-blue-50 border border-blue-100 rounded-xl px-2 py-3 flex gap-3 items-start mb-8">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
                 </svg>
-                <x-text variant="caption" color="info" class="font-medium leading-relaxed">
-                    Halaman ini di refresh setiap 10 detik. <br>Tetap di halaman ini untuk memantau pesananmu secara <span class="font-bold underline">real-time</span>
+                <x-text variant="caption" color="info" class="!text-blue-800 text-[11px] leading-relaxed font-semibold">
+                   Tetap di halaman ini untuk memantau pesananmu secara <br>real-time. <span class="font-bold underline">Halaman ini di refresh setiap 10 detik.</span>
                 </x-text>
             </div>
 
             {{-- Timeline Status --}}
-            @if($order->payment_status === 'pending')
+            @if($order->order_status === 'expired')
+                <div class="flex flex-col items-center justify-center p-6 bg-red-50 rounded-2xl border border-red-100 text-center mb-8">
+                    <svg class="w-12 h-12 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <x-text variant="h2" class="text-red-700 mb-2">Waktu Habis</x-text>
+                    <x-text variant="caption" color="secondary" class="mb-5 text-red-600/80">
+                        Batas waktu pembayaran pesanan ini telah habis dan telah dibatalkan secara otomatis.
+                    </x-text>
+                </div>
+            @elseif($order->payment_status === 'pending')
+                {{-- Countdown Timer Pembayaran --}}
+                @if($order->order_status === 'pending')
+                    @php
+                        $expireMinutes = ($order->payment_type === 'cash') ? 5 : 15;
+                        $expireTimeIso = \Carbon\Carbon::parse($order->created_at)->addMinutes($expireMinutes)->toIso8601String();
+                    @endphp
+
+                    <div class="mb-8 p-5 bg-white border border-red-200 rounded-2xl text-center shadow-sm">
+                        <x-text variant="caption" color="secondary" class="font-bold mb-1 uppercase tracking-widest text-[10px]">
+                            Sisa Waktu Pembayaran
+                        </x-text>
+                        <div id="countdown-timer" class="text-4xl font-black text-[#FF4647] tracking-widest" data-expire="{{ $expireTimeIso }}">
+                            00:00
+                        </div>
+                    </div>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const timerElement = document.getElementById('countdown-timer');
+                            if (!timerElement) return;
+
+                            const expireTime = new Date(timerElement.getAttribute('data-expire')).getTime();
+
+                            const countdownInterval = setInterval(function() {
+                                const now = new Date().getTime();
+                                const distance = expireTime - now;
+
+                                if (distance < 0) {
+                                    clearInterval(countdownInterval);
+                                    timerElement.innerHTML = "EXPIRED";
+                                    window.location.reload(); 
+                                    return;
+                                }
+
+                                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                                timerElement.innerHTML = 
+                                    (minutes < 10 ? "0" : "") + minutes + ":" + 
+                                    (seconds < 10 ? "0" : "") + seconds;
+                            }, 1000);
+                        });
+                    </script>
+                @endif
                 <div class="flex flex-col items-center justify-center p-6 bg-red-50 rounded-2xl border border-red-100 text-center mb-8">
                     <svg class="w-12 h-12 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>

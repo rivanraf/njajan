@@ -23,62 +23,56 @@
     <x-navbar logo="true" showSearch="true" showCart="true" />
 
     <div id="name-alert" class="hidden mx-5 mt-6 mb-1 px-4 py-2.5 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 animate-pulse">
-    <div class="shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
-        </svg>
+        <div class="shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <x-text variant="caption" class="text-red-700 font-bold leading-tight">
+            Nama pemesan minimal 3 karakter ya, biar pesananmu tidak tertukar!
+        </x-text>
     </div>
-    <x-text variant="caption" class="text-red-700 font-bold leading-tight">
-        Nama pemesan minimal 3 karakter ya, biar pesananmu tidak tertukar!
-    </x-text>
-</div>
 
     {{-- CUSTOMER INFO CARD --}}
     <div class="px-5 mt-4 pb-4 border-b-[6px] border-gray-50">
-    <div class="flex items-center justify-between mb-4">
-        <x-text variant="h2" class="font-bold" color="primary">Informasi Customer</x-text>
-    </div>
-
-    <div class="grid grid-cols-2 gap-3">
-        {{-- Sisi Kiri: Nama Pemesan --}}
-        <div class="flex flex-col gap-1.5">
-            <x-text variant="caption" color="secondary" class="tracking-tight text-gray-400 font-bold ml-1 uppercase text-[10px]">
-                Nama Pemesan
-            </x-text>
-            
-            {{-- Mengubah BG menjadi Border #f5f5f5 --}}
-            <div class="flex items-center bg-transparent border-[1.5px] border-[#e9e9e9] rounded-xl px-4 h-[48px] focus-within:border-[#FF4647] transition-all duration-200">
-                <input type="text" 
-                    id="customer_name_idx" 
-                    name="customer_name_preview" 
-                    placeholder="Nama Kamu" 
-                    value="{{ session('customer_name') }}" 
-                    required minlength="2"
-                    class="w-full bg-transparent text-sm font-bold text-gray-900 border-none outline-none focus:ring-0 p-0 placeholder:text-gray-500 placeholder:font-normal" 
-                    oninput="syncCustomerName(this.value)">
-            </div>
+        <div class="flex items-center justify-between mb-4">
+            <x-text variant="h2" class="font-bold" color="primary">Informasi Customer</x-text>
         </div>
 
-        {{-- Sisi Kanan: Nomor Meja --}}
-        <div class="flex flex-col gap-1.5">
-            <x-text variant="caption" color="secondary" class="tracking-tight text-gray-400 font-bold ml-1 uppercase text-[10px]">
-                Nomor Meja
-            </x-text>
-
-            {{-- Mengubah BG menjadi Border #f5f5f5 --}}
-            <div class="flex items-center bg-transparent border-[1.5px] border-[#e9e9e9] rounded-xl px-4 h-[48px]">
-                <x-text variant="body" color="primary" class="font-bold text-gray-700">Meja</x-text>
-                <x-text variant="body" color="primary" class="ml-auto font-black text-[#FF4647]">
-                    {{ str_pad(session('table_number', '01'), 2, '0', STR_PAD_LEFT) }}
+        <div class="grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1.5">
+                <x-text variant="body" color="secondary" class="tracking-tight text-gray-400 font-bold ml-1 capitalize text-[10px]">
+                    Nama Pemesan
                 </x-text>
+                <div class="flex items-center bg-transparent border-[1.5px] border-[#e9e9e9] rounded-xl px-4 h-[48px] focus-within:border-[#FF4647] transition-all duration-200">
+                    <input type="text" 
+                        id="customer_name_idx" 
+                        name="customer_name_preview" 
+                        placeholder="Nama Kamu" 
+                        value="{{ session('customer_name') }}" 
+                        required minlength="2"
+                        class="w-full bg-transparent text-sm font-bold text-gray-900 border-none outline-none focus:ring-0 p-0 placeholder:text-gray-500 placeholder:font-normal" 
+                        oninput="syncCustomerName(this.value)">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <x-text variant="body" color="secondary" class="tracking-tight text-gray-400 font-bold ml-1 capitalize text-[10px]">
+                    Nomor Meja
+                </x-text>
+                <div class="flex items-center bg-transparent border-[1.5px] border-[#e9e9e9] rounded-xl px-4 h-[48px]">
+                    <x-text variant="body" color="primary" class="font-bold text-gray-700">Meja</x-text>
+                    <x-text variant="body" color="primary" class="ml-auto font-black text-[#FF4647]">
+                        {{ str_pad(session('table_number', '01'), 2, '0', STR_PAD_LEFT) }}
+                    </x-text>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     {{-- SEARCH BAR --}}
     <div class="px-5 mt-6">
-        <div class="flex items-center bg-transparent border-[1.5px] border-[#e9e9e9] rounded-xl px-4 h-[46px] gap-3 focus-within:border-[#FF4647] focus-within:ring-0 focus-within:outline-none" id="searchBarWrapper">
+        <div class="flex items-center bg-transparent border-[1.5px] border-[#e9e9e9] rounded-xl px-4 h-[46px] gap-3 focus-within:border-[#FF4647]" id="searchBarWrapper">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-gray-400 shrink-0">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
@@ -87,91 +81,80 @@
     </div>
 
     {{-- 1. POPULAR MENU --}}
-<div id="popularMenuSection" class="mt-6">
-    <div class="px-5 mb-4">
-        {{-- Judul Utama --}}
-        <x-text variant="h2" class="text-lg font-semibold">
-            Popular Menu, pilihan banyak orang
-        </x-text>
-        
-        {{-- Deskripsi Tambahan --}}
-        <x-text variant="caption" color="secondary" class="font-medium mt-0 block leading-relaxed">
-            Menu terlaris yang sering jadi favorite customer sedunia
-        </x-text>
-    </div>
-
-    <div class="flex overflow-x-auto px-5 gap-4 no-scrollbar pb-4">
-        @php
-            // Logika backend tetap utuh
-            $allMenus = collect();
-            foreach($categories as $cat) {
-                foreach($cat->menus as $m) {
-                    $m->cat_name = $cat->name;
-                    $allMenus->push($m);
-                }
-            }
-            $popularMenus = $allMenus->take(4);
-        @endphp
-
-        @forelse($popularMenus as $menu)
-            <div class="product-wrapper shrink-0 w-36 relative" data-category-id="{{ $menu->category_id }}" data-name="{{ strtolower($menu->name) }}">
-                {{-- Konten kartu menu tetap sama --}}
-                @if(trim(strtolower($menu->status_stok)) == 'kosong')
-                    <div style="filter: grayscale(100%); opacity: 0.6; pointer-events: none;">
-                        <x-product-card :menu="$menu" :category-name="$menu->cat_name" variant="small" class="w-full" :href="'#'" />
-                    </div>
-                    <div class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
-                        <span class="bg-red-600 text-white font-bold text-[10px] px-2 py-1 rounded shadow-lg transform -rotate-12 border-2 border-white">HABIS</span>
-                    </div>
-                @else
-                    <x-product-card :menu="$menu" :category-name="$menu->cat_name" variant="small" class="w-full" />
-                @endif
-            </div>
-        @empty
-            <p class="text-sm text-gray-400 px-5">Belum ada menu populer.</p>
-        @endforelse
-    </div>
-</div>
-
-    {{-- 2. CATEGORY PILL TABS --}}
-        <div class="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-x-visible px-5 mt-4 gap-2 no-scrollbar pb-1" id="category-filters-container">
-            <x-category-item label="All" :active="true" category-id="all" />
-            
-            @foreach($categories as $category)
-                <x-category-item :label="$category->name" :active="false" category-id="{{ $category->id }}" />
-            @endforeach
+    <div id="popularMenuSection" class="mt-6">
+        <div class="px-5 mb-4">
+            <x-text variant="h2" class="text-lg font-semibold">
+                Popular Menu, pilihan banyak orang
+            </x-text>
+            <x-text variant="body" color="secondary" class="font-medium mt-0 block leading-relaxed">
+                Menu terlaris yang sering jadi favorite customer sedunia.
+            </x-text>
         </div>
 
-    {{-- CATEGORY SECTIONS --}}
-<div class="mt-4 pb-8" id="main-category-container">
-    @php
-        // 1. Ambil semua menu dari semua kategori ke dalam satu koleksi besar
-        $flatMenus = collect();
-        foreach($categories as $category) {
-            foreach($category->menus as $menu) {
-                // Simpan nama kategori ke dalam objek menu agar badge tetap muncul
-                $menu->temp_category_name = $category->name;
-                $flatMenus->push($menu);
-            }
-        }
-        // 2. ACAK TOTAL koleksi besar tersebut
-        $shuffledAll = $flatMenus->shuffle();
-    @endphp
+        <div class="flex overflow-x-auto px-5 gap-4 no-scrollbar pb-4">
+            @php
+                $allMenus = collect();
+                foreach($categories as $cat) {
+                    foreach($cat->menus as $m) {
+                        $m->cat_name = $cat->name;
+                        $allMenus->push($m);
+                    }
+                }
+                $popularMenus = $allMenus->take(4);
+            @endphp
 
-    <div class="px-5 grid grid-cols-2 gap-4 pb-4">
-        @forelse($shuffledAll as $menu)
-            {{-- Tambahkan class category-section-item untuk filter JS nanti --}}
-            <div class="product-wrapper w-full relative category-section-item" 
-                 data-category-id="{{ $menu->category_id }}" 
-                 data-name="{{ strtolower($menu->name) }}">
-                
-                <x-product-card :menu="$menu" :category-name="$menu->temp_category_name" variant="small" class="w-full" />
-            </div>
-        @empty
-            <p class="text-sm text-gray-400 px-5">Belum ada menu tersedia.</p>
-        @endforelse
+            @forelse($popularMenus as $menu)
+                <div class="product-wrapper shrink-0 w-36 relative" data-category-id="{{ $menu->category_id }}" data-name="{{ strtolower($menu->name) }}">
+                    @if(trim(strtolower($menu->status_stok)) == 'kosong')
+                        <div style="filter: grayscale(100%); opacity: 0.6; pointer-events: none;">
+                            <x-product-card :menu="$menu" :category-name="$menu->cat_name" variant="small" class="w-full" :href="'#'" />
+                        </div>
+                        <div class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
+                            <span class="bg-red-600 text-white font-bold text-[10px] px-2 py-1 rounded shadow-lg transform -rotate-12 border-2 border-white">HABIS</span>
+                        </div>
+                    @else
+                        <x-product-card :menu="$menu" :category-name="$menu->cat_name" variant="small" class="w-full" />
+                    @endif
+                </div>
+            @empty
+                <p class="text-sm text-gray-400 px-5">Belum ada menu populer.</p>
+            @endforelse
+        </div>
     </div>
-</div>
+
+    {{-- 2. CATEGORY PILL TABS --}}
+    <div class="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-x-visible px-5 mt-4 gap-2 no-scrollbar pb-1" id="category-filters-container">
+        <x-category-item label="All" :active="true" category-id="all" />
+        @foreach($categories as $category)
+            <x-category-item :label="$category->name" :active="false" category-id="{{ $category->id }}" />
+        @endforeach
+    </div>
+
+    {{-- CATEGORY SECTIONS --}}
+    <div class="mt-4 pb-8" id="main-category-container">
+        @php
+            $flatMenus = collect();
+            foreach($categories as $category) {
+                foreach($category->menus as $menu) {
+                    $menu->temp_category_name = $category->name;
+                    $flatMenus->push($menu);
+                }
+            }
+            $shuffledAll = $flatMenus->shuffle();
+        @endphp
+
+        <div class="px-5 grid grid-cols-2 gap-4 pb-4">
+            @forelse($shuffledAll as $menu)
+                <div class="product-wrapper w-full relative category-section-item" 
+                     data-category-id="{{ $menu->category_id }}" 
+                     data-name="{{ strtolower($menu->name) }}">
+                    <x-product-card :menu="$menu" :category-name="$menu->temp_category_name" variant="small" class="w-full" />
+                </div>
+            @empty
+                <p class="text-sm text-gray-400 px-5">Belum ada menu tersedia.</p>
+            @endforelse
+        </div>
+    </div>
 
     {{-- EMPTY STATE --}}
     <div id="searchEmptyState" class="hidden px-5 py-16 flex-col items-center text-center gap-2">
@@ -189,69 +172,48 @@
         const catContainer = document.getElementById('main-category-container');
         const categoryPills = document.getElementById('category-filters-container');
         const emptyState = document.getElementById('searchEmptyState');
-        
-        // ELEMENT BARU UNTUK VALIDASI NAMA
         const nameInput = document.getElementById('customer_name_idx');
         const nameAlert = document.getElementById('name-alert');
 
-        // 1. LOGIKA VALIDASI NAMA (REAL-TIME)
         if (nameInput) {
             nameInput.addEventListener('input', function(e) {
                 const nameVal = e.target.value.trim();
                 const inputWrapper = e.target.parentElement;
-
-                // Sinkronisasi ke Session (Logic lama tetap dipertahankan)
                 syncCustomerName(nameVal);
-
-                // Cek panjang karakter
                 if (nameVal.length > 0 && nameVal.length < 3) {
-                    // Tampilkan Alert & Border Merah jika 1-2 karakter
                     if (nameAlert) nameAlert.classList.remove('hidden');
-                    if (inputWrapper) {
-                        inputWrapper.classList.add('border-red-400');
-                        inputWrapper.classList.remove('border-gray-100');
-                    }
+                    if (inputWrapper) inputWrapper.classList.add('border-red-400');
                 } else {
-                    // Sembunyikan jika kosong atau >= 3 karakter
                     if (nameAlert) nameAlert.classList.add('hidden');
-                    if (inputWrapper) {
-                        inputWrapper.classList.remove('border-red-400');
-                        inputWrapper.classList.add('border-gray-100');
-                    }
+                    if (inputWrapper) inputWrapper.classList.remove('border-red-400');
                 }
             });
         }
 
-        // 2. LOGIKA SEARCH MENU
         searchInput.addEventListener('input', function () {
             const keyword = this.value.toLowerCase().trim();
             const productWrappers = document.querySelectorAll('.product-wrapper[data-name]');
-            const categorySections = document.querySelectorAll('.category-section');
             let matchCount = 0;
 
             if (keyword.length === 0) {
-                productWrappers.forEach(w => w.style.display = '');
-                categorySections.forEach(s => s.style.display = '');
+                // RESET TAMPILAN JIKA SEARCH KOSONG
+                popularSection.style.display = 'block'; // Tampilkan lagi Popular Menu
                 categoryPills.style.display = '';
-                catContainer.style.display = 'block';
+                productWrappers.forEach(w => w.style.display = '');
                 emptyState.classList.add('hidden');
                 emptyState.classList.remove('flex');
                 return;
             }
 
+            // SEMBUNYIKAN POPULAR MENU SAAT SEARCHING
+            popularSection.style.display = 'none'; 
             categoryPills.style.display = 'none';
-            catContainer.style.display = 'block';
 
             productWrappers.forEach(wrapper => {
                 const name = wrapper.getAttribute('data-name');
                 const visible = name.includes(keyword);
                 wrapper.style.display = visible ? '' : 'none';
                 if (visible) matchCount++;
-            });
-
-            categorySections.forEach(section => {
-                const visibleProducts = section.querySelectorAll('.product-wrapper[data-name]:not([style*="display: none"])');
-                section.style.display = visibleProducts.length > 0 ? '' : 'none';
             });
 
             if (matchCount === 0) {
@@ -264,7 +226,6 @@
         });
     });
 
-    // 3. LOGIKA SYNC NAMA KE SESSION (DEBOUNCE)
     let nameDebounce;
     function syncCustomerName(value) {
         clearTimeout(nameDebounce);
@@ -280,14 +241,12 @@
         }, 400);
     }
 
-    // 4. PREVENT CACHE RELOAD
     window.addEventListener('pageshow', function (event) {
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             window.location.reload();
         }
     });
 
-    // 5. FILTER KATEGORI
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.category-filter-btn');
         if (!btn) return;
@@ -305,14 +264,8 @@
         
         const selectedId = btn.getAttribute('data-category-id');
         const mainCategoryContainer = document.getElementById('main-category-container');
-        const categorySections = document.querySelectorAll('.category-section');
-
-        categorySections.forEach(s => {
-            const sectionId = s.getAttribute('data-category-section-id');
-            s.style.display = (selectedId === 'all' || sectionId == selectedId) ? '' : 'none';
-        });
-
         const productWrappers = mainCategoryContainer.querySelectorAll('.product-wrapper');
+        
         productWrappers.forEach(w => {
             const productCategoryId = w.getAttribute('data-category-id');
             w.style.display = (selectedId === 'all' || productCategoryId == selectedId) ? '' : 'none';

@@ -84,11 +84,11 @@
 
     <div class="flex-1">
         {{-- Label: Menggunakan hirarki caption (Level 5) --}}
-        <x-text variant="caption" color="secondary" class="uppercase tracking-tight font-bold block">
+        <x-text variant="caption" color="secondary" class="capitalize tracking-tight font-bold block">
             Pemesan
         </x-text>
         {{-- Value: Menggunakan hirarki body (Level 4) --}}
-        <x-text variant="body" class="font-bold uppercase tracking-wide">
+        <x-text variant="body" class="font-bold capitalize tracking-wide">
             {{ $customerName }}
         </x-text>
     </div>
@@ -105,7 +105,7 @@
     <div class="flex-1">
         <div>
             {{-- Label: Menggunakan hirarki caption (Level 5) --}}
-            <x-text variant="caption" color="secondary" class="uppercase tracking-tight font-bold block text-[10px]">
+            <x-text variant="caption" color="secondary" class="capitalize tracking-tight font-bold block text-[10px]">
                 Meja
             </x-text>
             {{-- Value: Menggunakan hirarki body (Level 4) --}}

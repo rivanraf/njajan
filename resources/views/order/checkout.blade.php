@@ -142,7 +142,7 @@
                             <img src="{{ asset('images/emptybadge.png') }}" class="w-32 h-auto opacity-90" alt="Empty">
                         </div>
                         <x-text variant="h2" class="text-gray-900 leading-tight">Keranjang Kosong</x-text>
-                        <x-text variant="caption" color="secondary" class="max-w-[210px] leading-relaxed mt-2">Sepertinya kamu belum mau pesan sesuatu nih.</x-text>
+                        <x-text variant="body" color="secondary" class="max-w-[210px] leading-relaxed mt-2">Sepertinya kamu belum mau pesan sesuatu nih.</x-text>
                     </div>
                     <div class="mt-auto w-full pt-10">
                         <x-button type="button" variant="primary" class="w-full text-base font-semibold tracking-tight h-[52px]" onclick="window.location.href='{{ $backUrl }}'">
@@ -158,31 +158,49 @@
             @if(isset($history) && count($history) > 0)
                 <div class="px-5 py-4 space-y-4 pb-[180px]">
                     @foreach($history as $order)
-                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm {{ ($order->payment_status === 'expired' || $order->order_status === 'cancelled') ? 'opacity-75' : '' }}">
                             <div class="flex justify-between items-start border-b border-gray-50 pb-3 mb-3">
                                 <div>
                                     <x-text variant="caption" color="secondary" class="mb-0.5">Kode Pesanan</x-text>
-                                    <x-text variant="body" class="font-bold">NJN-{{ $order->id }}-{{ strtotime($order->created_at) }}</x-text>
+                                    <x-text variant="body" class="font-bold {{ ($order->payment_status === 'expired') ? 'text-gray-400 line-through' : '' }}">
+                                        NJN-{{ $order->id }}-{{ strtotime($order->created_at) }}
+                                    </x-text>
                                 </div>
                                 <div class="text-right">
                                     <x-text variant="caption" color="secondary" class="mb-0.5">Tanggal</x-text>
                                     <x-text variant="caption" class="font-semibold">{{ $order->created_at->format('d M, H:i') }}</x-text>
                                 </div>
                             </div>
+                            
                             <div class="flex justify-between items-center mb-4">
                                 <div class="flex flex-col">
                                     <x-text variant="caption" color="secondary" class="mb-0.5">Total Harga</x-text>
-                                    <x-text variant="body" class="font-bold text-[#FF4647]">Rp{{ number_format($order->total_price, 0, '.', '.') }}</x-text>
+                                    <x-text variant="body" class="font-bold {{ ($order->payment_status === 'expired') ? 'text-gray-400' : 'text-[#FF4647]' }}">
+                                        Rp{{ number_format($order->total_price, 0, '.', '.') }}
+                                    </x-text>
                                 </div>
                                 <div>
+                                    {{-- LOGIKA LABEL STATUS --}}
                                     @if($order->payment_status === 'paid')
                                         <span class="px-2.5 py-1 rounded-md bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-wider">Lunas</span>
+                                    @elseif($order->payment_status === 'expired' || $order->order_status === 'cancelled')
+                                        <span class="px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-wider">Expired</span>
                                     @elseif($order->payment_status === 'pending')
                                         <span class="px-2.5 py-1 rounded-md bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-wider">Menunggu</span>
                                     @endif
                                 </div>
                             </div>
-                            <x-button type="button" variant="outline" class="w-full text-xs font-bold py-2" onclick="window.location.href='{{ route('order.track', $order->id) }}'">Lacak Pesanan</x-button>
+
+                            {{-- TOMBOL: Disabled jika expired --}}
+                            @if($order->payment_status === 'expired' || $order->order_status === 'cancelled')
+                                <x-button type="button" variant="outline" class="w-full text-xs font-bold py-2 border-gray-200 text-gray-400 cursor-not-allowed" disabled>
+                                    Pesanan Dibatalkan
+                                </x-button>
+                            @else
+                                <x-button type="button" variant="outline" class="w-full text-xs font-bold py-2" onclick="window.location.href='{{ route('order.track', $order->id) }}'">
+                                    Lacak Pesanan
+                                </x-button>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -191,13 +209,12 @@
                     <div class="mb-5 flex flex-col items-center mt-auto">
                         <img src="{{ asset('images/tandatanya.png') }}" class="w-32 h-auto opacity-90 mb-6">
                         <x-text variant="h2" class="text-gray-900 leading-tight text-center">Belum Ada Riwayat</x-text>
-                        <x-text variant="caption" color="secondary" class="max-w-[210px] text-center mt-2">Pesanan yang sudah kamu bayar akan muncul di sini.</x-text>
+                        <x-text variant="body" color="secondary" class="max-w-[210px] text-center mt-2">Pesanan yang sudah kamu bayar akan muncul di sini.</x-text>
                     </div>
                     <div class="mt-auto w-full pt-10"></div>
                 </div>
             @endif
         </div>
-    </div>
 
     {{-- MODAL VALIDASI NAMA --}}
     <div id="modal-validation" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true">
