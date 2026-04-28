@@ -116,9 +116,26 @@ class ReservationController extends Controller
     public function success($id)
     {
         $reservation = Reservation::with('table')->where('booking_code', $id)->firstOrFail();
+        
+        // Mencegah Race Condition: Jika DB masih pending padahal user sudah bayar
         if (!in_array($reservation->payment_status, ['paid', 'settlement'])) {
-            return redirect()->route('reserve.pending', $id);
+            try {
+                \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+                \Midtrans\Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+                $status = \Midtrans\Transaction::status($reservation->booking_code);
+                
+                if (in_array($status->transaction_status, ['settlement', 'capture'])) {
+                    $reservation->payment_status = 'paid';
+                    $reservation->status = 'confirmed';
+                    $reservation->save();
+                } else {
+                    return redirect()->route('reserve.pending', $id);
+                }
+            } catch (\Exception $e) {
+                return redirect()->route('reserve.pending', $id);
+            }
         }
+        
         return view('reservation.success', compact('reservation'));
     }
 

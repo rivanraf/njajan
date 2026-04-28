@@ -26,6 +26,7 @@ class OrderController extends Controller
             }
 
             // Validasi Status Reservasi Harian (Pre-Check)
+            //waktu reservasi yang boleh memesan adalah 30 menit sebelum dan sesudah waktu reservasi
             if ($table) {
                 $now = \Carbon\Carbon::now();
                 
