@@ -88,7 +88,7 @@
             Pemesan
         </x-text>
         {{-- Value: Menggunakan hirarki body (Level 4) --}}
-        <x-text variant="body" class="font-bold capitalize tracking-wide">
+        <x-text variant="body" id="display_customer_name" class="font-bold capitalize tracking-wide">
             {{ $customerName }}
         </x-text>
     </div>
@@ -116,7 +116,7 @@
     </div>
 </div>
                 {{-- Input tersembunyi yang dibutuhkan di backend --}}
-                <input type="hidden" name="customer_name" value="{{ $customerName }}">
+                <input type="hidden" id="input_customer_name" name="customer_name" value="{{ $customerName }}">
             </div>
 
             {{-- SECTION: RINGKASAN PEMBAYARAN --}}
@@ -211,4 +211,21 @@
             Bayar Sekarang
         </x-button>
     </x-bottom-bar>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedName = localStorage.getItem('customer_name');
+        if (savedName && savedName !== '-') {
+            const displayEl = document.getElementById('display_customer_name');
+            const inputEl = document.getElementById('input_customer_name');
+            
+            if (displayEl) {
+                displayEl.textContent = savedName;
+            }
+            if (inputEl) {
+                inputEl.value = savedName;
+            }
+        }
+    });
+    </script>
 </x-layout>

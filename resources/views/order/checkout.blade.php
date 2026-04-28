@@ -237,7 +237,7 @@
                     <x-text variant="body" color="secondary" class="leading-relaxed mb-4">
                         Mohon maaf, nama pemesan wajib diisi agar dapur kami tidak bingung. Silakan isi namamu di bawah ini:
                     </x-text>
-                    <input type="text" id="modal_customer_name" placeholder="Nama Kamu" value="{{ session('customer_name') }}" class="w-full border-gray-300 rounded-xl px-4 py-3 focus:ring-[#FF4647] focus:border-[#FF4647] bg-gray-50 mb-1" minlength="2">
+                    <input type="text" id="modal_customer_name" placeholder="Nama Kamu" value="{{ session('customer_name') }}" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF4647] bg-gray-50 mb-1" minlength="2">
                     <p id="modal_name_error" class="hidden text-red-500 text-xs font-medium ml-1">Nama minimal 2 karakter.</p>
                 </div>
 

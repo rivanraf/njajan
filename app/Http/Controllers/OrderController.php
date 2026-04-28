@@ -176,6 +176,12 @@ class OrderController extends Controller
 
     public function processCheckout(Request $request)
     {
+        $customerName = $request->input('customer_name');
+        if (empty($customerName) || $customerName === '-') {
+            $customerName = session('customer_name');
+        }
+        $request->merge(['customer_name' => $customerName]);
+
         $request->validate([
             'customer_name' => 'required|string|max:255',
             'payment_method' => 'required|string|in:QRIS,Cashier',
