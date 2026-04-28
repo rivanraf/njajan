@@ -40,6 +40,9 @@ Route::post('/process-checkout', [OrderController::class, 'processCheckout'])->n
 Route::get('/order/success/{id}', [OrderController::class, 'paymentSuccess'])->name('order.success');
 Route::get('/order/pending-cash/{id}', [OrderController::class, 'pendingCash'])->name('order.pending-cash');
 
+// Fallback Route untuk "Finish URL" Midtrans di Dashboard
+Route::get('/payment/finish', [OrderController::class, 'paymentFinish'])->name('payment.finish');
+
 // =============================================
 // BREEZE AUTH ROUTES (Hanya Login Biasa)
 // =============================================

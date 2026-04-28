@@ -289,6 +289,49 @@ class OrderController extends Controller
         return view('order.success', compact('order'));
     }
 
+    public function paymentFinish(Request $request)
+    {
+        $orderIdParam = $request->query('order_id');
+        $transactionStatus = $request->query('transaction_status');
+        
+        if (!$orderIdParam) {
+            return redirect('/')->with('error', 'Data pesanan tidak valid dari Midtrans.');
+        }
+
+        // 1. Cek apakah ini reservasi meja (dimulai dengan BOOKING-)
+        if (\Illuminate\Support\Str::startsWith($orderIdParam, 'BOOKING-')) {
+            $reservation = \App\Models\Reservation::where('booking_code', $orderIdParam)->first();
+            if (!$reservation) {
+                return redirect('/')->with('error', 'Data reservasi tidak ditemukan.');
+            }
+            if (in_array($transactionStatus, ['settlement', 'capture'])) {
+                return redirect()->route('reserve.success', $reservation->booking_code);
+            } else {
+                return redirect()->route('reserve.pending', $reservation->booking_code);
+            }
+        }
+
+        // 2. Jika pesanan biasa (format: NJN-{id}-{timestamp})
+        $parts = explode('-', $orderIdParam);
+        $localId = $parts[1] ?? null;
+
+        if (!$localId) {
+            return redirect('/')->with('error', 'Format Order ID tidak dikenali.');
+        }
+
+        $order = Order::find($localId);
+        
+        if (!$order) {
+            return redirect('/')->with('error', 'Pesanan tidak ditemukan.');
+        }
+
+        if (in_array($transactionStatus, ['settlement', 'capture'])) {
+            return redirect()->route('order.success', $order->id);
+        } else {
+            return redirect()->route('order.track', $order->id);
+        }
+    }
+
     public function pendingCash($id)
     {
         $order = Order::with('table')->findOrFail($id);
