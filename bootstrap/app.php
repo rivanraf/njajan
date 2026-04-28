@@ -19,8 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'order/pending-cash/*'
         ]);
         $middleware->alias([
-        'role' => \App\Http\Middleware\CheckRole::class,
-        'role.redirect' => \App\Http\Middleware\RoleRedirect::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
+            'role.redirect' => \App\Http\Middleware\RoleRedirect::class,
+        ]);
+        $middleware->web(append: [
+            \App\Http\Middleware\RestoreTableSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

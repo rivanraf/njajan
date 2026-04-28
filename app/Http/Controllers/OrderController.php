@@ -87,6 +87,10 @@ class OrderController extends Controller
     {
         $menu = Menu::findOrFail($id);
         
+        if (!session()->has('table_id')) {
+            return redirect('/')->with('error', 'Sesi meja Anda tidak valid atau telah berakhir. Silakan scan ulang QR Code di meja Anda.');
+        }
+        
         $qty = (int) $request->input('qty', 1);
         $notes = $request->input('notes', '');
         $variant = $request->input('variant', '');
@@ -148,6 +152,10 @@ class OrderController extends Controller
 
     public function checkout(Request $request)
     {
+        if (!session()->has('table_id')) {
+            return redirect('/')->with('error', 'Sesi meja Anda tidak valid atau telah berakhir. Silakan scan ulang QR Code di meja Anda.');
+        }
+
         $sessionKey = 'cart_table_' . session('table_id');
         $cart = session()->get($sessionKey, []);
         
@@ -162,6 +170,10 @@ class OrderController extends Controller
 
     public function payment()
     {
+        if (!session()->has('table_id')) {
+            return redirect('/')->with('error', 'Sesi meja Anda tidak valid atau telah berakhir. Silakan scan ulang QR Code di meja Anda.');
+        }
+
         $sessionKey = 'cart_table_' . session('table_id');
         $cart = session()->get($sessionKey, []);
         
@@ -191,6 +203,10 @@ class OrderController extends Controller
             'customer_name' => 'required|string|max:255',
             'payment_method' => 'required|string|in:QRIS,Cashier',
         ]);
+        
+        if (!session()->has('table_id')) {
+            return redirect('/')->with('error', 'Sesi meja Anda tidak valid atau telah berakhir. Silakan scan ulang QR Code di meja Anda.');
+        }
         
         $sessionKey = 'cart_table_' . session('table_id');
         $cart = session()->get($sessionKey, []);
