@@ -233,15 +233,17 @@
                     </button>
                 </div>
 
-                <div class="mb-8">
-                    <x-text variant="body" color="secondary" class="leading-relaxed">
-                        Mohon maaf, nama pemesan wajib diisi agar dapur kami tidak bingung. Silakan isi namamu terlebih dahulu ya!
+                <div class="mb-6">
+                    <x-text variant="body" color="secondary" class="leading-relaxed mb-4">
+                        Mohon maaf, nama pemesan wajib diisi agar dapur kami tidak bingung. Silakan isi namamu di bawah ini:
                     </x-text>
+                    <input type="text" id="modal_customer_name" placeholder="Nama Kamu" value="{{ session('customer_name') }}" class="w-full border-gray-300 rounded-xl px-4 py-3 focus:ring-[#FF4647] focus:border-[#FF4647] bg-gray-50 mb-1" minlength="2">
+                    <p id="modal_name_error" class="hidden text-red-500 text-xs font-medium ml-1">Nama minimal 2 karakter.</p>
                 </div>
 
                 <footer class="flex flex-col gap-3">
-                    <x-button type="button" variant="primary" class="w-full h-12 font-bold" onclick="window.location.href='{{ $backUrl }}'">
-                        Isi Nama Sekarang
+                    <x-button type="button" variant="primary" class="w-full h-12 font-bold" id="btn-submit-name" onclick="submitNameAndCheckout()">
+                        Lanjut Checkout
                     </x-button>
                     <button type="button" onclick="closeModal()" class="text-sm font-semibold text-gray-400 py-2 hover:text-gray-600 transition">
                         Nanti Saja
@@ -276,7 +278,11 @@
     }
 
     function validateAndPay(event, sessionName) {
-        const nameVal = sessionName ? sessionName.trim() : '';
+        let nameVal = localStorage.getItem('customer_name');
+        if (!nameVal) {
+            nameVal = sessionName ? sessionName.trim() : '';
+            if (nameVal) localStorage.setItem('customer_name', nameVal);
+        }
         
         if (!nameVal || nameVal === '-' || nameVal.length < 2) {
             event.preventDefault();
@@ -290,12 +296,51 @@
         const modal = document.getElementById('modal-validation');
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; // Prevent scroll
+        
+        // Focus input if opened
+        const modalInput = document.getElementById('modal_customer_name');
+        if (modalInput && !modalInput.value) {
+            modalInput.value = localStorage.getItem('customer_name') || '';
+        }
+        setTimeout(() => modalInput && modalInput.focus(), 100);
     }
 
     function closeModal() {
         const modal = document.getElementById('modal-validation');
         modal.classList.add('hidden');
         document.body.style.overflow = 'auto';
+    }
+
+    function submitNameAndCheckout() {
+        const nameInput = document.getElementById('modal_customer_name').value.trim();
+        const errorMsg = document.getElementById('modal_name_error');
+        const btnSubmit = document.getElementById('btn-submit-name');
+        
+        if (nameInput.length < 2 || nameInput === '-') {
+            errorMsg.classList.remove('hidden');
+            return;
+        }
+        
+        errorMsg.classList.add('hidden');
+        localStorage.setItem('customer_name', nameInput);
+        
+        // Disable button to prevent double submit
+        const originalText = btnSubmit.innerHTML;
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = 'Menyimpan...';
+        
+        fetch('{{ route("save.customer.name") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ customer_name: nameInput })
+        }).then(() => {
+            window.location.href = "{{ route('order.payment') }}";
+        }).catch(() => {
+            window.location.href = "{{ route('order.payment') }}";
+        });
     }
     </script>
 </x-layout>

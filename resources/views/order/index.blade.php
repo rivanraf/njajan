@@ -176,10 +176,19 @@
         const nameAlert = document.getElementById('name-alert');
 
         if (nameInput) {
+            const savedName = localStorage.getItem('customer_name');
+            if (savedName) {
+                nameInput.value = savedName;
+                syncCustomerName(savedName);
+            } else if (nameInput.value) {
+                localStorage.setItem('customer_name', nameInput.value);
+            }
+
             nameInput.addEventListener('input', function(e) {
                 const nameVal = e.target.value.trim();
                 const inputWrapper = e.target.parentElement;
                 syncCustomerName(nameVal);
+                localStorage.setItem('customer_name', e.target.value);
                 if (nameVal.length > 0 && nameVal.length < 3) {
                     if (nameAlert) nameAlert.classList.remove('hidden');
                     if (inputWrapper) inputWrapper.classList.add('border-red-400');
