@@ -13,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['device_id']);
+        $middleware->validateCsrfTokens(except: [
+            'api/midtrans-callback',
+            'order/success/*',
+            'order/pending-cash/*'
+        ]);
         $middleware->alias([
         'role' => \App\Http\Middleware\CheckRole::class,
         'role.redirect' => \App\Http\Middleware\RoleRedirect::class,

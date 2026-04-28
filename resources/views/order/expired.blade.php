@@ -76,7 +76,7 @@
                     Pesan Ulang Sekarang
                 </x-button>
 
-                <x-button type="button" onclick="window.location.href='{{ url('/') }}'" variant="secondary" class="w-full flex items-center justify-center h-[52px] rounded-lg transition active:scale-95 bg-transparent border border-gray-200 text-gray-500 font-semibold shadow-none">
+                <x-button type="button" onclick="let h = localStorage.getItem('table_hash') || '{{ session('table_hash') }}'; window.location.href = h ? '{{ url('/scan') }}/' + h : '{{ url('/') }}';" variant="secondary" class="w-full flex items-center justify-center h-[52px] rounded-lg transition active:scale-95 bg-transparent border border-gray-200 text-gray-500 font-semibold shadow-none">
                     Kembali ke Beranda
                 </x-button>
             </div>
