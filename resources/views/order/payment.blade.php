@@ -2,7 +2,7 @@
     
     @php
         // Mengamankan semua data dengan fallback agar tidak error (muter-muter)
-        $cartItems = $cart ?? session('cart', []);
+        $cartItems = $cart ?? session('cart_table_' . session('table_id'), []);
         $cartTotalPrice = $totalPrice ?? collect($cartItems)->sum(function($item) {
             return ($item['price'] ?? 0) * ($item['qty'] ?? 1);
         });

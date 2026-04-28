@@ -1,7 +1,7 @@
 <x-layout title="Njajan++ | Home">
     
     @php
-        $cart = session('cart', []);
+        $cart = session('cart_table_' . session('table_id'), []);
         $cartCount = collect($cart)->sum('qty');
         $totalCartPrice = collect($cart)->sum(function($item) {
             return $item['price'] * $item['qty'];

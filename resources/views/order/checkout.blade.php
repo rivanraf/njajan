@@ -1,5 +1,5 @@
 @php
-    $cart = session()->get('cart');
+    $cart = session()->get('cart_table_' . session('table_id'));
     $cart = is_array($cart) ? $cart : [];
     
     $totalQty = collect($cart)->sum(function($item) {

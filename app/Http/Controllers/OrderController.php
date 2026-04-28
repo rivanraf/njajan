@@ -93,7 +93,8 @@ class OrderController extends Controller
         
         $cartKey = $id . ($variant ? '_' . $variant : '') . ($notes ? '_' . md5($notes) : '');
         
-        $cart = session()->get('cart', []);
+        $sessionKey = 'cart_table_' . session('table_id');
+        $cart = session()->get($sessionKey, []);
         
         if(isset($cart[$cartKey])) {
             $cart[$cartKey]['qty'] += $qty;
@@ -109,14 +110,15 @@ class OrderController extends Controller
             ];
         }
         
-        session()->put('cart', $cart);
+        session()->put($sessionKey, $cart);
         
         return redirect()->back()->with('success', 'berhasil ditambahkan ke keranjang!');
     }
 
     public function updateCart(Request $request, $id)
     {
-        $cart = session()->get('cart', []);
+        $sessionKey = 'cart_table_' . session('table_id');
+        $cart = session()->get($sessionKey, []);
         
         if (isset($cart[$id])) {
             $qty = (int) $request->input('qty');
@@ -125,7 +127,7 @@ class OrderController extends Controller
             } else {
                 unset($cart[$id]);
             }
-            session()->put('cart', $cart);
+            session()->put($sessionKey, $cart);
         }
         
         return redirect()->back();    
@@ -133,11 +135,12 @@ class OrderController extends Controller
 
     public function removeCart($id)
     {
-        $cart = session()->get('cart', []);
+        $sessionKey = 'cart_table_' . session('table_id');
+        $cart = session()->get($sessionKey, []);
         
         if (isset($cart[$id])) {
             unset($cart[$id]);
-            session()->put('cart', $cart);
+            session()->put($sessionKey, $cart);
         }
         
         return redirect()->back();
@@ -145,7 +148,8 @@ class OrderController extends Controller
 
     public function checkout(Request $request)
     {
-        $cart = session()->get('cart', []);
+        $sessionKey = 'cart_table_' . session('table_id');
+        $cart = session()->get($sessionKey, []);
         
         $deviceId = $request->cookie('device_id') ?? ($_COOKIE['device_id'] ?? null);
         $history = [];
@@ -158,7 +162,8 @@ class OrderController extends Controller
 
     public function payment()
     {
-        $cart = session()->get('cart', []);
+        $sessionKey = 'cart_table_' . session('table_id');
+        $cart = session()->get($sessionKey, []);
         
         if(empty($cart)){
             return redirect('/')->with('error', 'Keranjang masih kosong!');
@@ -187,7 +192,8 @@ class OrderController extends Controller
             'payment_method' => 'required|string|in:QRIS,Cashier',
         ]);
         
-        $cart = session()->get('cart', []);
+        $sessionKey = 'cart_table_' . session('table_id');
+        $cart = session()->get($sessionKey, []);
         if(empty($cart)){
             return redirect('/')->with('error', 'Keranjang masih kosong!');
         }
@@ -239,7 +245,8 @@ class OrderController extends Controller
                 $order->snap_token = $snapToken;
                 $order->save();
 
-                session()->forget('cart');
+                $sessionKey = 'cart_table_' . session('table_id');
+                session()->forget($sessionKey);
                 return view('order.payment_snap', compact('snapToken', 'order'));
                 
             } catch (\Exception $e) {
@@ -250,7 +257,8 @@ class OrderController extends Controller
         $order->payment_status = 'pending'; 
         $order->save();
 
-        session()->forget('cart');
+        $sessionKey = 'cart_table_' . session('table_id');
+        session()->forget($sessionKey);
         return redirect()->route('order.pending-cash', $order->id);
     }
 
@@ -260,7 +268,8 @@ class OrderController extends Controller
         if (!$order) {
             return redirect('/')->with('error', 'Pesanan tidak ditemukan.');
         }
-        session()->forget('cart');
+        $sessionKey = 'cart_table_' . session('table_id');
+        session()->forget($sessionKey);
         return view('order.success', compact('order'));
     }
 
