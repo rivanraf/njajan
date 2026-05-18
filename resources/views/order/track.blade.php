@@ -1,130 +1,118 @@
 <x-layout title="Track Order | Njajan++">
 
     <x-slot name="headScripts">
-        @if($order->payment_status === 'pending' && $order->snap_token)
-            <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
-        @endif
+        {{-- HEAD SCRIPTS MIDTRANS DIHAPUS KARENA PROSES BAYAR SUDAH DI-HANDLE PENDING-CASH --}}
     </x-slot>
 
     {{-- Container Utama --}}
-    <div class="flex flex-col h-screen bg-white max-w-md mx-auto overflow-hidden relative">
+    <div class="w-full min-h-screen bg-white relative">
         
-        {{-- NAVBAR BARU --}}
+        {{-- NAVBAR --}}
         @php
             $tableHash = $order->table->hash ?? null;
-            $backUrl = $tableHash ? route('scan.qr', $tableHash) : url('/');
+            $backUrl = $tableHash ? url('/scan/' . $tableHash) : url('/');
         @endphp
         <x-navbar title="Track Order" showBack="true" backUrl="{{ $backUrl }}" />
 
         {{-- Area Scrollable --}}
-        <main class="flex-1 overflow-y-auto px-6 pt-6 pb-40 no-scrollbar">
-            
-            {{-- Header: Judul & Nomor Meja --}}
-            <div class="mb-8 border-b-[6px] border-gray-50 pb-4 flex justify-between items-center">
-                <div>
-                    <x-text variant="h1" class="mb-0">Track Your Order</x-text>
-                    <div class="flex items-center gap-2 mt-0">
-                        <x-text variant="caption" color="secondary" class="font-medium capitalize tracking-wider">Order #{{ $order->id }}</x-text>
-                        <x-text variant="caption" color="secondary">{{ $order->created_at->format('H:i') }} WIB</x-text>
-                    </div>
+        <main class="w-full flex flex-col px-5 pt-6 pb-40">
+
+            {{-- Timeline Status --}}
+            @php
+                $currentStatus = $order->order_status; // 'pending', 'processing', 'completed'
+                $barActive = 'bg-[#5D1525]'; 
+                $barInactive = 'bg-gray-200';
+                $textActive = 'text-gray-600 font-medium';
+                $textInactive = 'text-gray-600 font-medium';
+            @endphp
+
+            <div class="mb-4 w-full">
+                {{-- Grid Baris Indikator --}}
+                <div class="grid grid-cols-3 gap-2 h-[6px] w-full">
+                    {{-- Segmen 1: Placed --}}
+                    <div class="rounded-full transition-colors duration-500 {{ $barActive }}"></div>
+                    
+                    {{-- Segmen 2: Preparing --}}
+                    <div class="rounded-full transition-colors duration-500 {{ ($currentStatus === 'processing' || $currentStatus === 'completed') ? $barActive : $barInactive }}"></div>
+                    
+                    {{-- Segmen 3: Ready --}}
+                    <div class="rounded-full transition-colors duration-500 {{ ($currentStatus === 'completed') ? $barActive : $barInactive }}"></div>
                 </div>
-                
-                {{-- Badge Meja --}}
-                <div class="bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                    <span class="text-xl font-semibold text-[#5D1525] tracking-tighter leading-none">{{ $order->table->number ?? '01' }}</span>
+
+                {{-- Label Status Text --}}
+                <div class="grid grid-cols-3 gap-2 mt-2 text-sm font-sans">
+                    <div class="text-left {{ $textActive }}">Placed</div>
+                    <div class="text-center {{ ($currentStatus === 'processing' || $currentStatus === 'completed') ? $textActive : $textInactive }}">Preparing</div>
+                    <div class="text-right {{ ($currentStatus === 'completed') ? $textActive : $textInactive }}">Ready</div>
                 </div>
             </div>
 
             {{-- Alert Info Box --}}
-            <div class="w-full bg-blue-50 border border-blue-100 rounded-xl px-2 py-3 flex gap-3 items-start mb-8">
+            <div class="w-full bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 flex gap-3 items-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
                 </svg>
-                <x-text variant="caption" color="info" class="!text-blue-800 text-[11px] leading-relaxed font-semibold">
-                   Tetap di halaman ini untuk memantau pesananmu secara <br>real-time. <span class="font-bold underline">Halaman ini di refresh setiap 10 detik.</span>
-                </x-text>
+                <p class="font-sans font-medium text-xs text-blue-800">
+                   Stay on this page to monitor your order in real-time.
+                </p>
             </div>
+            
+            <div class="mb-6">
+                {{-- Card Wrapper Utama (Border Gray 300 1.5px dengan Overflow Hidden) --}}
+                <div class="border-[1.5px] border-gray-300 rounded-lg overflow-hidden bg-white">
+                    
+                    {{-- Header Sub-Box: Menambahkan Button Refresh di Sisi Kanan Sejajar Judul --}}
+                    <div class="bg-gray-100 px-4 h-[45px] flex items-center justify-between border-b border-gray-300">
+                        <h1 class="font-sans font-medium text-sm md:text-base text-gray-900 tracking-tight block">Track Your Order</h1>
+                        
+                        {{-- Tombol Refresh Modern & Interaktif --}}
+                        <button type="button" 
+                                onclick="window.location.reload();" 
+                                class="flex items-center gap-1.5 bg-white border border-gray-300 hover:bg-gray-50 active:scale-95 transition px-2.5 py-1 rounded-[6px] text-xs font-semibold text-gray-700 shadow-sm cursor-pointer">
+                            {{-- Ikon SVG Refresh --}}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                                <path d="M0 0h24v24H0z" fill="none" />
+                                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                    <path d="M21 12a9 9 0 0 0-9-9a9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                                    <path d="M3 3v5h5m-5 4a9 9 0 0 0 9 9a9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                                    <path d="M16 16h5v5" />
+                                </g>
+                            </svg>
 
-            {{-- Timeline Status --}}
-            @if($order->order_status === 'expired')
-                <div class="flex flex-col items-center justify-center p-6 bg-red-50 rounded-2xl border border-red-100 text-center mb-8">
-                    <svg class="w-12 h-12 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <x-text variant="h2" class="text-red-700 mb-2">Waktu Habis</x-text>
-                    <x-text variant="caption" color="secondary" class="mb-5 text-red-600/80">
-                        Batas waktu pembayaran pesanan ini telah habis dan telah dibatalkan secara otomatis.
-                    </x-text>
-                </div>
-            @elseif($order->payment_status === 'pending')
-                {{-- Countdown Timer Pembayaran --}}
-                @if($order->order_status === 'pending')
-                    @php
-                        $expireMinutes = ($order->payment_type === 'cash') ? 5 : 15;
-                        $expireTimeIso = \Carbon\Carbon::parse($order->created_at)->addMinutes($expireMinutes)->toIso8601String();
-                    @endphp
-
-                    <div class="mb-8 p-5 bg-white border border-red-200 rounded-2xl text-center shadow-sm">
-                        <x-text variant="caption" color="secondary" class="font-bold mb-1 uppercase tracking-widest text-[10px]">
-                            Sisa Waktu Pembayaran
-                        </x-text>
-                        <div id="countdown-timer" class="text-4xl font-black text-[#FF4647] tracking-widest" data-expire="{{ $expireTimeIso }}">
-                            00:00
-                        </div>
+                            <span>Refresh</span>
+                        </button>
                     </div>
 
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const timerElement = document.getElementById('countdown-timer');
-                            if (!timerElement) return;
-
-                            const expireTime = new Date(timerElement.getAttribute('data-expire')).getTime();
-
-                            const countdownInterval = setInterval(function() {
-                                const now = new Date().getTime();
-                                const distance = expireTime - now;
-
-                                if (distance < 0) {
-                                    clearInterval(countdownInterval);
-                                    timerElement.innerHTML = "EXPIRED";
-                                    window.location.reload(); 
-                                    return;
-                                }
-
-                                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                                timerElement.innerHTML = 
-                                    (minutes < 10 ? "0" : "") + minutes + ":" + 
-                                    (seconds < 10 ? "0" : "") + seconds;
-                            }, 1000);
-                        });
-                    </script>
-                @endif
-                <div class="flex flex-col items-center justify-center p-6 bg-red-50 rounded-2xl border border-red-100 text-center mb-8">
-                    <svg class="w-12 h-12 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    <x-text variant="h2" class="text-red-700 mb-2">Selesaikan Pembayaran</x-text>
-                    <x-text variant="caption" color="secondary" class="mb-5 text-red-600/80">
-                        Pesananmu belum diteruskan ke dapur karena pembayaran belum selesai.
-                    </x-text>
-                    
-                    @if($order->payment_type === 'qris' && $order->snap_token)
-                        <x-button type="button" variant="primary" class="w-full bg-[#FF4647] border-transparent" onclick="triggerSnap()">Bayar Sekarang (QRIS)</x-button>
-                    @else
-                        <div class="px-4 py-3 bg-white w-full rounded-xl border border-red-200">
-                            <x-text variant="caption" class="font-bold text-red-700">Harap segera bayar di kasir!</x-text>
+                    {{-- Content Area: Bagian Rincian Informasi Pesanan --}}
+                    <div class="bg-transparent p-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="font-sans font-normal text-sm text-gray-600">Order ID</span>
+                            <span class="font-sans font-medium text-sm text-gray-900">#{{ $order->id }}</span>
                         </div>
-                    @endif
+                        <div class="flex justify-between items-center">
+                            <span class="font-sans font-normal text-sm text-gray-600">Table Number</span>
+                            <span class="font-sans font-medium text-sm text-gray-900">Table {{ $order->table->number ?? '-' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-sans font-normal text-sm text-gray-600">Order Time</span>
+                            <span class="font-sans font-medium text-sm text-gray-900">{{ $order->created_at->format('H:i') }} WIB</span>
+                        </div>
+                    </div>
                 </div>
-            @else
+            </div>
+            @if($order->order_status !== 'expired')
                 @php
                     $status = $order->order_status;
-                    $bgActive = 'bg-[#5D1525] text-white';
-                    $bgInactive = 'bg-gray-200 text-gray-400';
+                    
+                    // REVISI STRATEGIC: Mengubah skema solid menjadi outline melalui kombinasi border pekat dan text color
+                    $bgActive = 'bg-white border-2 border-[#5D1525] text-[#5D1525]';
+                    $bgInactive = 'bg-white border-2 border-gray-200 text-gray-400';
+                    
+                    // Garis vertikal penghubung antar lingkaran status
                     $line1to2 = ($status === 'processing' || $status === 'completed') ? 'bg-[#5D1525]' : 'bg-gray-200';
                     $line2to3 = ($status === 'completed') ? 'bg-[#5D1525]' : 'bg-gray-200';
+                    
+                    // Alokasi warna dinamis ke masing-masing objek komponen
                     $s1Color = $bgActive;
                     $s2Color = ($status === 'processing' || $status === 'completed') ? $bgActive : $bgInactive;
                     $s3Color = ($status === 'completed') ? $bgActive : $bgInactive;
@@ -134,63 +122,101 @@
                     {{-- Step 1 --}}
                     <div class="relative flex gap-4 pb-10">
                         <div class="absolute left-[13.5px] top-7 h-full w-[3px] {{ $line1to2 }} transition-colors duration-500"></div>
-                        <div class="relative z-10 size-7 shrink-0 rounded-full {{ $s1Color }} flex items-center justify-center text-[11px] font-black shadow-sm">1</div>
+                        {{-- Lingkaran Keadaan Outline --}}
+                        <div class="relative z-10 size-7 shrink-0 rounded-full {{ $s1Color }} flex items-center justify-center shadow-sm transition-all duration-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24">
+                                <path d="M0 0h24v24H0z" fill="none" />
+                                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                    <path d="M16 14v2.2l1.6 1M16 2v4m5 1.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5M3 10h5m0-8v4" />
+                                    <circle cx="16" cy="16" r="6" />
+                                </g>
+                            </svg>
+                        </div>
                         <div class="flex flex-col">
-                            <x-text variant="body" class="font-bold text-gray-900">Pesanan Diterima</x-text>
-                            <x-text variant="body" color="secondary" class="mt-1">Pembayaran Lunas. Menunggu antrian.</x-text>
+                            <h3 class="font-sans font-semibold text-sm md:text-base text-gray-900 block">Order Received</h3>
+                            <p class="font-sans font-normal text-sm text-gray-600 block">Payment in full, waiting in line.</p>
                         </div>
                     </div>
 
                     {{-- Step 2 --}}
                     <div class="relative flex gap-4 pb-10">
                         <div class="absolute left-[13.5px] top-7 h-full w-[3px] {{ $line2to3 }} transition-colors duration-500"></div>
-                        <div class="relative z-10 size-7 shrink-0 rounded-full {{ $s2Color }} flex items-center justify-center text-[11px] font-black">2</div>
+                        {{-- Lingkaran Keadaan Outline --}}
+                        <div class="relative z-10 size-7 shrink-0 rounded-full {{ $s2Color }} flex items-center justify-center shadow-sm transition-all duration-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24">
+                                <path d="M0 0h24v24H0z" fill="none" />
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12h20m-2 0v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8m0-4l16-4M8.86 6.78l-.45-1.81a2 2 0 0 1 1.45-2.43l1.94-.48a2 2 0 0 1 2.43 1.46l.45 1.8" />
+                            </svg>
+                        </div>
                         <div class="flex flex-col">
-                            <x-text variant="body" class="font-bold {{ ($status === 'processing' || $status === 'completed') ? 'text-gray-900' : 'text-gray-400' }}">Diproses</x-text>
-                            <x-text variant="body" color="secondary" class="mt-1">Barista/Dapur sedang menyiapkan pesananmu.</x-text>
+                            <h3 class="font-sans font-semibold text-sm md:text-base block {{ ($status === 'processing' || $status === 'completed') ? 'text-gray-900' : 'text-gray-400' }}">Order Preparing</h3>
+                            <p class="font-sans font-normal text-sm text-gray-600 block">Barista/Kitchen is preparing your order.</p>
                         </div>
                     </div>
 
                     {{-- Step 3 --}}
                     <div class="relative flex gap-4">
-                        <div class="relative z-10 size-7 shrink-0 rounded-full {{ $s3Color }} flex items-center justify-center text-[11px] font-black">3</div>
+                        {{-- Lingkaran Keadaan Outline --}}
+                        <div class="relative z-10 size-7 shrink-0 rounded-full {{ $s3Color }} flex items-center justify-center shadow-sm transition-all duration-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24">
+                                <path d="M0 0h24v24H0z" fill="none" />
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20m14-7V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2zm0 0v7" />
+                            </svg>
+                        </div>
                         <div class="flex flex-col">
-                            <x-text variant="body" class="font-bold {{ ($status === 'completed') ? 'text-gray-900' : 'text-gray-400' }}">Selesai</x-text>
-                            <x-text variant="body" color="secondary" class="mt-1">Silakan ambil di counter atau tunggu pelayan.</x-text>
+                            <h3 class="font-sans font-semibold text-sm md:text-base block {{ ($status === 'completed') ? 'text-gray-900' : 'text-gray-400' }}">Ready to Serve</h3>
+                            <p class="font-sans font-normal text-sm text-gray-600 block">Please take your order at the counter.</p>
                         </div>
                     </div>
                 </div>
             @endif
 
-            {{-- List Menu --}}
-            <div class="mt-8 border-t-[6px] border-gray-50 pb-4 pt-6">
-                <x-text variant="h3" class="mb-4">Pesanan Anda</x-text>
-                <div class="space-y-4">
-                    @foreach($order->orderDetails as $detail)
-                        <div class="flex gap-4 items-start border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-                            <div class="w-16 h-16 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
-                                @if($detail->menu && $detail->menu->image)
-                                    <img src="{{ asset('storage/' . $detail->menu->image) }}" class="w-full h-full object-cover" alt="{{ $detail->menu->name }}">
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            {{-- LIST MENU CARD LAYOUT --}}
+            <div class="mt-8 mb-6">
+                {{-- Card Wrapper Utama (Border Gray 300 1.5px dengan Overflow Hidden) --}}
+                <div class="border-[1.5px] border-gray-300 rounded-lg overflow-hidden bg-white">
+                    
+                    {{-- Header Sub-Box: BG Gray 100 dengan Tinggi 45px Simetris --}}
+                    <div class="bg-gray-100 px-4 h-[45px] flex items-center border-b border-gray-300">
+                        <h2 class="font-sans font-medium text-sm md:text-base text-gray-900 tracking-tight block">Order Summary</h2>
+                    </div>
+
+                    {{-- Content Area: Tempat Menampilkan Daftar Produk --}}
+                    <div class="p-4 bg-transparent">
+                        @foreach($order->orderDetails as $detail)
+                            <div class="flex gap-4 items-start pb-4 last:border-0 last:pb-0">
+                                {{-- Foto Menu --}}
+                                <div class="w-16 h-16 rounded-lg bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
+                                    @if($detail->menu && $detail->menu->image)
+                                        <img src="{{ asset('storage/' . $detail->menu->image) }}" class="w-full h-full object-cover" alt="{{ $detail->menu->name }}">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                    @endif
+                                </div>
+                                
+                                {{-- Detail Konten Teks --}}
+                                <div class="flex-1 py-0.5 min-w-0">
+                                    {{-- Baris Atas: Nama Menu di Kiri, Qty di Kanan Sejajar Sempurna --}}
+                                    <div class="flex justify-between items-start gap-4">
+                                        <h3 class="font-sans font-medium text-sm md:text-base text-gray-900 leading-tight truncate">
+                                            {{ $detail->menu ? $detail->menu->name : 'Menu Dihapus' }}
+                                        </h3>
+                                        <span class="font-sans font-medium text-xs text-gray-400 whitespace-nowrap shrink-0">
+                                            {{ $detail->qty }}x
+                                        </span>
                                     </div>
-                                @endif
-                            </div>
-                            <div class="flex-1 py-0.5">
-                                <div class="flex justify-between items-start gap-2">
-                                    <x-text variant="body" class="font-bold leading-tight max-w-[140px]">{{ $detail->menu ? $detail->menu->name : 'Menu Dihapus' }}</x-text>
-                                    <x-text variant="price" color="accent" class="font-bold whitespace-nowrap">Rp{{ number_format($detail->subtotal, 0, ',', '.') }}</x-text>
-                                </div>
-                                @if($detail->variant)
-                                    <x-text variant="caption" color="secondary" class="mt-1 font-medium italic">Varian: {{ $detail->variant }}</x-text>
-                                @endif
-                                <div class="flex justify-between items-center mt-2">
-                                    <x-text variant="caption" color="secondary" class="font-bold uppercase tracking-widest">{{ $detail->qty }}x</x-text>
+                                    {{-- Baris Bawah: Varian (Jika Ada) --}}
+                                    @if($detail->variant)
+                                        <span class="font-sans font-medium text-sm capitalize text-gray-400 block mt-1">
+                                            {{ $detail->variant }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </main>
@@ -198,34 +224,17 @@
         {{-- Sticky Bottom Bar --}}
         <x-bottom-bar>
             <div class="flex flex-col gap-3 w-full">
-                <x-button variant="primary" class="w-full py-4 text-sm font-bold" 
+                <x-button variant="primary" class="w-full py-4 text-base font-semibold" 
                     onclick="window.location.href='{{ $backUrl }}'">
-                    Tambah Pesanan
+                    Make another
                 </x-button>
-                <x-text variant="caption" color="secondary" class="text-center">Punya kendala? Silakan hubungi kru kami.</x-text>
+                <p class="font-sans font-medium text-xs capitalize text-gray-600 text-center block">Having trouble? Please contact our team.</p>
             </div>
         </x-bottom-bar>
     </div>
 
     {{-- Script --}}
     <x-slot name="footerScripts">
-        <script type="text/javascript">
-            @if($order->payment_status === 'pending' && $order->snap_token)
-            function triggerSnap() {
-                snap.pay('{{ $order->snap_token }}', {
-                    onSuccess: function(result) { window.location.reload(); },
-                    onPending: function(result) { window.location.reload(); },
-                    onError: function(result) { alert('Gagal memproses pembayaran.'); },
-                    onClose: function() { alert('Layar pembayaran ditutup.'); }
-                });
-            }
-            @endif
-
-            setInterval(function() {
-                @if($order->order_status != 'completed')
-                    location.reload();
-                @endif
-            }, 10000); 
-        </script>
+        {{-- JAVASCRIPT SNAP PAY TRIGGER DIHAPUS KARENA SUDAH BERSIH DARI BLOK PENDING --}}
     </x-slot>
 </x-layout>

@@ -15,10 +15,10 @@
 <x-layout title="Keranjang - Njajan" :isCartEmpty="$totalQty <= 0">
 
     {{-- HEADER --}}
-    <x-navbar title="Keranjang" showBack="true" backUrl="{{ $backUrl }}" />
+    <x-navbar title="Cart" showBack="true" backUrl="{{ $backUrl }}" />
 
     {{-- NAVIGATION PILL TABS --}}
-    <div class="px-5 py-3 bg-white border-b border-gray-50 mt-2 relative z-10 overflow-x-auto no-scrollbar">
+    <div class="px-5 py-3 bg-white mt-2 relative z-10 overflow-x-auto no-scrollbar">
         <div class="flex items-center gap-2">
             <button type="button" id="btn-tab-order" onclick="switchView('order')" 
                 class="px-5 py-1.5 rounded-full text-[clamp(0.7rem,2vw,0.75rem)] whitespace-nowrap transition-all duration-200 shrink-0 flex items-center justify-center h-[36px] select-none relative border-[1.5px] font-bold active:scale-95 bg-transparent border-[#FF4647] text-[#FF4647] shadow-sm">
@@ -28,7 +28,7 @@
             <button type="button" id="btn-tab-history" onclick="switchView('history')" 
                 class="px-5 py-1.5 rounded-full text-[clamp(0.7rem,2vw,0.75rem)] whitespace-nowrap transition-all duration-200 shrink-0 flex items-center justify-center h-[36px] select-none relative border-[1.5px] font-bold active:scale-95 bg-white border-gray-200 text-gray-400">
                 <span class="relative z-10">
-                    Riwayat Pesanan ({{ isset($history) ? count($history) : 0 }})
+                    Order History ({{ isset($history) ? count($history) : 0 }})
                 </span>
             </button>
         </div>
@@ -48,60 +48,149 @@
                         </div>
                     @endif
 
+                    {{-- ============================================================================================== --}}
+                    {{-- COMPONENT: SARAN MENU / SUGGESTED ITEMS (HORIZONTAL SLIDER - NO CARD VERSION) --}}
+                    {{-- ============================================================================================== --}}
+                    @if(isset($suggestions) && $suggestions->count() > 0)
+                    <div>
+                        <div class="px-5 mb-3">
+                            <h3 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight mb-4 block">Want to buy more asupan?</h3>
+                        </div>
+
+                        {{-- Kontainer pembungkus luar --}}
+                        <div class="relative w-full">
+                            
+                            {{-- Slider utama --}}
+                            <div class="flex overflow-x-auto gap-5 no-scrollbar px-5 pb-3" 
+                                style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-padding-left: 20px; scroll-padding-right: 20px;">
+                                
+                                @foreach($suggestions as $suggest)
+                                {{-- FIX: Elemen pembungkus kartu (bg, border, p-2.5, shadow-sm) DIHAPUS SEUTUHNYA --}}
+                                <div class="shrink-0 w-28 flex flex-col justify-between" style="scroll-snap-align: start;">
+                                    
+                                    {{-- Foto Produk: Batas border dan radius dipindahkan langsung ke sini agar tidak monoton --}}
+                                    <div class="w-full h-28 bg-gray-50 rounded-lg overflow-hidden mb-2 relative border border-gray-100">
+                                        @if($suggest->image)
+                                            <img src="{{ asset('storage/' . $suggest->image) }}" alt="{{ $suggest->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            <div class="w-full h-full bg-gray-100 flex items-center justify-center text-xl">☕</div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Informasi Teks & Tombol Tambah --}}
+                                    <div class="flex flex-col flex-1 justify-between">
+                                        <div class="px-0.5">
+                                            <span class="block w-full text-xs font-medium text-gray-900 font-sans truncate capitalize">
+                                                {{ $suggest->name }}
+                                            </span>
+                                            <span class="block text-[12px] font-medium text-gray-900 font-sans mt-0.5">
+                                                Rp{{ number_format($suggest->price, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+
+                                        {{-- Tombol Tambah minimalis yang pas dengan gaya tanpa kartu --}}
+                                        <a href="{{ route('menu.show', $suggest->id) }}" 
+                                        class="w-full mt-2 py-1.5 bg-white text-gray-900 text-xs font-medium rounded-lg transition-all active:scale-95 text-center block leading-none"
+                                        style="border: 1.5px solid #FF4647; color: #FF4647;">
+                                        + Add
+                                        </a>
+                                    </div>
+                                    
+                                </div>
+                                @endforeach
+
+                            </div>
+                            
+                            {{-- Efek Gradasi Pudar di Ujung KANAN Slider --}}
+                            <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10"></div>
+                        </div>
+                    </div>
+                    @endif
+                    {{-- ============================================================================================== --}}
+
+                    {{-- TEKS PENANDA BATAS: MENU YANG DIPESAN USER --}}
+                    <div class="px-5 pt-2 pb-2">
+                        <h3 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight block">
+                            Items In Your Cart
+                        </h3>
+                    </div>
+
                     <div class="divide-y divide-gray-100">
-                        @foreach($cart as $id => $item)
+                        @php
+                            // LOGIKA KRITIS: Kelompokkan cart berdasarkan menu_id agar jadi 1 baris per produk
+                            $groupedCart = collect($cart)->groupBy('menu_id');
+                            $grandTotal = 0;
+                        @endphp
+
+                        @foreach($groupedCart as $menuId => $items)
                             @php 
-                                $price = isset($item['price']) ? (float) $item['price'] : 0;
-                                $qty = isset($item['qty']) ? (int) $item['qty'] : 1;
-                                $subtotal = $price * $qty; 
+                                // Ambil data representatif dari item pertama dalam grup
+                                $firstItem = $items->first();
+                                $qty = $items->sum('qty');
+                                $subtotal = $items->sum(function($i) { return ($i['price'] ?? 0) * ($i['qty'] ?? 1); });
                                 $grandTotal += $subtotal;
-                                $nameStr = $item['name'] ?? 'Menu Item';
+
+                                // Bersihkan nama (Regex tetap dipertahankan sesuai kode asli Anda)
+                                $nameStr = $firstItem['name'] ?? 'Menu Item';
                                 $cleanName = $nameStr;
                                 $metaStr = '';
                                 if(preg_match('/\((.*)\)/', $nameStr, $matches)) {
                                     $metaStr = $matches[1];
                                     $cleanName = trim(str_replace('('.$metaStr.')', '', $nameStr));
                                 }
-                                $menuModel = isset($item['menu_id']) ? \App\Models\Menu::find($item['menu_id']) : null;
-                                $fallbackImg = asset('images/logo.png');
-                                $finalImage = $menuModel && $menuModel->image ? asset('storage/' . $menuModel->image) : ($item['image'] ?? $fallbackImg);
+
+                                // Gabungkan Varian & Notes dari semua item dalam grup
+                                $displayVariant = $items->pluck('variant')->filter()->unique()->implode(', ') ?: $metaStr;
+                                $allNotes = $items->pluck('notes')->filter()->unique()->implode(', ');
+
+                                $menuModel = isset($firstItem['menu_id']) ? \App\Models\Menu::find($firstItem['menu_id']) : null;
+                                $finalImage = $menuModel && $menuModel->image ? asset('storage/' . $menuModel->image) : ($firstItem['image'] ?? asset('images/logo.png'));
                             @endphp
 
+                            {{-- UI BOX --}}
                             <div class="bg-white flex gap-4 relative overflow-hidden h-28 px-5 py-3">
-                                <div class="w-24 h-full shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-50">
+                                <div class="w-24 h-full shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-50">
                                     <img src="{{ $finalImage }}" onerror="this.onerror=null; this.src='{{ asset('images/logo.png') }}';" class="w-full h-full object-cover">
                                 </div>
+                                
                                 <div class="flex-1 flex flex-col justify-between min-w-0 py-0.5">
                                     <div class="relative pr-8">
-                                        <x-text variant="body" class="font-bold truncate block mb-1">{{ $cleanName }}</x-text>
-                                        <form action="{{ route('cart.remove', $id) }}" method="POST" class="absolute top-0 right-0 z-10">
+                                        <h3 class="font-sans font-semibold text-sm md:text-base text-gray-900 truncate block">{{ $cleanName }}</h3>
+                                        
+                                        {{-- Tombol Hapus --}}
+                                        <form action="{{ route('cart.remove', $menuId) }}" method="POST" class="absolute top-0 right-0 z-10">
                                             @csrf
-                                            <button type="submit" class="text-gray-300 hover:text-[#FF4647] transition">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                                            <button type="submit" class="text-gray-600 hover:text-[#FF4647] transition">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                                                    <path d="M0 0h24v24H0z" fill="none" />
+                                                    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                </svg>
                                             </button>
                                         </form>
-                                        @php $displayVariant = !empty($item['variant']) ? $item['variant'] : $metaStr; @endphp
+
                                         <div class="flex flex-col">
                                             @if($displayVariant)
-                                                <x-text variant="caption" color="secondary" class="truncate">Varian: {{ $displayVariant }}</x-text>
+                                                <span class="font-sans font-medium text-xs capitalize text-gray-900 truncate block">{{ $displayVariant }}</span>
                                             @endif
-                                            @if(!empty($item['notes']))
-                                                <x-text variant="caption" color="muted" class="italic truncate">"{{ $item['notes'] }}"</x-text>
+                                            @if(!empty($allNotes))
+                                                <span class="font-sans font-medium text-xs text-gray-600 truncate block">Notes: {{ $allNotes }}</span>
                                             @endif
                                         </div>
                                     </div>
+
                                     <div class="flex justify-between items-end">
-                                        <x-text variant="price" color="accent">Rp{{ number_format($subtotal, 0, '.', '.') }}</x-text>
+                                        <span class="font-sans font-semibold text-gray-900 text-xs">Rp{{ number_format($subtotal, 0, '.', '.') }}</span>
+                                        
                                         <div class="flex items-center gap-3 bg-gray-50/50 rounded-full p-0.5 border border-gray-100">
-                                            <form action="{{ route('cart.update', $id) }}" method="POST" class="m-0">
+                                            <form action="{{ route('cart.update', $menuId) }}" method="POST" class="m-0">
                                                 @csrf
                                                 <input type="hidden" name="qty" value="{{ $qty - 1 }}">
                                                 <button type="submit" class="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 shadow-sm active:scale-90 transition">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg>
                                                 </button>
                                             </form>
-                                            <x-text variant="body" class="font-semibold w-4 text-center">{{ $qty }}</x-text>
-                                            <form action="{{ route('cart.update', $id) }}" method="POST" class="m-0">
+                                            <span class="font-sans font-medium text-sm md:text-base text-gray-900 w-4 text-center block">{{ $qty }}</span>
+                                            <form action="{{ route('cart.update', $menuId) }}" method="POST" class="m-0">
                                                 @csrf
                                                 <input type="hidden" name="qty" value="{{ $qty + 1 }}">
                                                 <button type="submit" class="w-6 h-6 flex items-center justify-center rounded-full border-[1.5px] border-[#FF4647] text-[#FF4647] bg-white shadow-sm active:scale-90 transition">
@@ -117,36 +206,40 @@
                 </div>
 
                 <x-bottom-bar>
-                    <div class="flex items-center justify-between gap-4 px-1 w-full">
-                        <div class="flex flex-col">
-                            <x-text variant="caption" color="secondary" class="mb-0.5">Total Pesanan</x-text>
-                            <x-text variant="price" class="text-lg font-black tracking-tight leading-tight">
-                                Rp{{ number_format($grandTotal, 0, '.', '.') }}
-                            </x-text>
+                    <div class="flex flex-col gap-3 px-1 w-full">
+                        <div class="flex items-end justify-between w-full">
+                            <div class="flex flex-col">
+                                <span class="font-sans font-medium text-base capitalize text-gray-900 mb-2 block">Total Order</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-sans font-semibold text-gray-900 text-base mb-2 leading-none block">
+                                    Rp{{ number_format($grandTotal, 0, '.', '.') }}
+                                </span>
+                            </div>
                         </div>
-                        <div class="flex-1 max-w-[220px]">
+                        <div class="w-full">
                             <x-button 
                                 type="button" 
                                 variant="primary" 
                                 class="w-full text-sm font-bold tracking-tight h-[52px] rounded-2xl shadow-sm" 
                                 onclick="validateAndPay(event, '{{ session('customer_name') }}')">
-                                Bayar Sekarang
+                                checkout
                             </x-button>
                         </div>
                     </div>
                 </x-bottom-bar>
             @else
                 <div class="flex flex-col items-center justify-center bg-white px-8 min-h-[calc(100vh-120px)] pb-6">
-                    <div class="flex flex-col items-center text-center mt-auto">
-                        <div class="relative mb-6">
+                    <div class="flex flex-col items-center text-center mt-auto mb-auto">
+                        <div class="relative mb-2">
                             <img src="{{ asset('images/emptybadge.png') }}" class="w-32 h-auto opacity-90" alt="Empty">
                         </div>
-                        <x-text variant="h2" class="text-gray-900 leading-tight">Keranjang Kosong</x-text>
-                        <x-text variant="body" color="secondary" class="max-w-[210px] leading-relaxed mt-2">Sepertinya kamu belum mau pesan sesuatu nih.</x-text>
+                        <h2 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight leading-tight">Empty cart</h2>
+                        <p class="font-sans font-normal text-base text-gray-600 leading-relaxed max-w-[210px] mt-2 mx-auto">It seems like you don't want to order anything yet.</p>
                     </div>
                     <div class="mt-auto w-full pt-10">
                         <x-button type="button" variant="primary" class="w-full text-base font-semibold tracking-tight h-[52px]" onclick="window.location.href='{{ $backUrl }}'">
-                            Lihat Menu
+                            Explore Menu
                         </x-button>
                     </div>
                 </div>
@@ -158,47 +251,79 @@
             @if(isset($history) && count($history) > 0)
                 <div class="px-5 py-4 space-y-4 pb-[180px]">
                     @foreach($history as $order)
-                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm {{ ($order->payment_status === 'expired' || $order->order_status === 'cancelled') ? 'opacity-75' : '' }}">
-                            <div class="flex justify-between items-start border-b border-gray-50 pb-3 mb-3">
+                        <div class="bg-white p-4 rounded-xl border-[1.5px] border-gray-200 {{ ($order->payment_status === 'expired' || $order->order_status === 'cancelled') ? 'opacity-75' : '' }}">
+                            <div class="flex justify-between items-start border-b border-gray-50 pb-2">
                                 <div>
-                                    <x-text variant="caption" color="secondary" class="mb-0.5">Kode Pesanan</x-text>
-                                    <x-text variant="body" class="font-bold {{ ($order->payment_status === 'expired') ? 'text-gray-400 line-through' : '' }}">
+                                    <span class="font-sans font-medium text-xs capitalize text-gray-600 mb-0.5 block">Order ID</span>
+                                    <span class="font-sans font-semibold text-xs md:text-sm text-gray-900 block {{ ($order->payment_status === 'expired') ? '!text-gray-600 line-through' : '' }}">
                                         NJN-{{ $order->id }}-{{ strtotime($order->created_at) }}
-                                    </x-text>
+                                    </span>
                                 </div>
                                 <div class="text-right">
-                                    <x-text variant="caption" color="secondary" class="mb-0.5">Tanggal</x-text>
-                                    <x-text variant="caption" class="font-semibold">{{ $order->created_at->format('d M, H:i') }}</x-text>
+                                    <span class="font-sans font-medium text-xs capitalize text-gray-600 mb-0.5 block">Date</span>
+                                    <span class="font-sans font-semibold text-xs text-gray-900 leading-relaxed block">{{ $order->created_at->format('d M, H:i') }}</span>
                                 </div>
                             </div>
                             
-                            <div class="flex justify-between items-center mb-4">
+                            <div class="flex justify-between items-center mb-4 mt-2">
                                 <div class="flex flex-col">
-                                    <x-text variant="caption" color="secondary" class="mb-0.5">Total Harga</x-text>
-                                    <x-text variant="body" class="font-bold {{ ($order->payment_status === 'expired') ? 'text-gray-400' : 'text-[#FF4647]' }}">
+                                    <span class="font-sans font-medium text-xs capitalize text-gray-600 mb-0.5 block">Total Price</span>
+                                    <span class="font-sans font-semibold text-xs text-gray-900 block {{ ($order->payment_status === 'expired') ? '!text-gray-400' : '' }}">
                                         Rp{{ number_format($order->total_price, 0, '.', '.') }}
-                                    </x-text>
+                                    </span>
                                 </div>
                                 <div>
-                                    {{-- LOGIKA LABEL STATUS --}}
                                     @if($order->payment_status === 'paid')
-                                        <span class="px-2.5 py-1 rounded-md bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-wider">Lunas</span>
+                                        <span class="px-2.5 py-1 rounded-md bg-green-50 text-green-600 text-[10px] font-semibold capitalize">Success</span>
                                     @elseif($order->payment_status === 'expired' || $order->order_status === 'cancelled')
-                                        <span class="px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-wider">Expired</span>
+                                        <span class="px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-[10px] font-semibold capitalize">Expired</span>
                                     @elseif($order->payment_status === 'pending')
-                                        <span class="px-2.5 py-1 rounded-md bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-wider">Menunggu</span>
+                                        <span class="px-2.5 py-1 rounded-md bg-orange-50 text-orange-600 text-[10px] font-semibold capitalize">Pending</span>
                                     @endif
                                 </div>
                             </div>
 
-                            {{-- TOMBOL: Disabled jika expired --}}
+                            {{-- DROPDOWN MENU ITEMS --}}
+                            <div class="mb-4">
+                                <details class="group bg-gray-100 rounded-lg border border-gray-300 overflow-hidden shadow-sm">
+                                    <summary class="flex items-center justify-between cursor-pointer list-none p-3 outline-none">
+                                        <span class="font-sans font-normal text-[12px] text-gray-700">
+                                            Items ({{ $order->orderDetails->count() }})
+                                        </span>
+                                        <div class="transition-transform duration-300 group-open:rotate-180">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+                                    </summary>
+                                    <div class="px-3 pb-3 space-y-3 bg-white border-t border-gray-100 pt-3">
+                                        @foreach($order->orderDetails as $detail)
+                                            <div class="flex justify-between items-center gap-2">
+                                                <div class="flex flex-col min-w-0">
+                                                    <span class="font-sans font-medium text-xs text-gray-900 truncate">
+                                                        {{ $detail->menu->name ?? 'Menu' }}
+                                                    </span>
+                                                    <span class="font-sans font-medium text-[10px] text-gray-500">
+                                                        {{ $detail->qty }}x @if($detail->variant) • {{ $detail->variant }} @endif
+                                                    </span>
+                                                </div>
+                                                <span class="font-sans font-semibold text-xs text-gray-800 shrink-0">
+                                                    Rp{{ number_format($detail->subtotal, 0, '.', '.') }}
+                                                </span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </details>
+                            </div>
+
+                            {{-- TOMBOL --}}
                             @if($order->payment_status === 'expired' || $order->order_status === 'cancelled')
-                                <x-button type="button" variant="outline" class="w-full text-xs font-bold py-2 border-gray-200 text-gray-400 cursor-not-allowed" disabled>
-                                    Pesanan Dibatalkan
+                                <x-button type="button" variant="outline" class="w-full text-sm font-semibold py-2 border-gray-200 text-gray-400 cursor-not-allowed" disabled>
+                                    Order Cancelled
                                 </x-button>
                             @else
-                                <x-button type="button" variant="outline" class="w-full text-xs font-bold py-2" onclick="window.location.href='{{ route('order.track', $order->id) }}'">
-                                    Lacak Pesanan
+                                <x-button type="button" variant="primary" class="w-full text-sm font-semibold py-2" onclick="window.location.href='{{ route('order.track', $order->id) }}'">
+                                    Track Order
                                 </x-button>
                             @endif
                         </div>
@@ -206,15 +331,18 @@
                 </div>
             @else
                 <div class="flex flex-col items-center justify-center bg-white px-5 min-h-[calc(100vh-120px)] pb-6">
-                    <div class="mb-5 flex flex-col items-center mt-auto">
-                        <img src="{{ asset('images/tandatanya.png') }}" class="w-32 h-auto opacity-90 mb-6">
-                        <x-text variant="h2" class="text-gray-900 leading-tight text-center">Belum Ada Riwayat</x-text>
-                        <x-text variant="body" color="secondary" class="max-w-[210px] text-center mt-2">Pesanan yang sudah kamu bayar akan muncul di sini.</x-text>
+                    <div class="flex flex-col items-center mt-auto mb-auto">
+                        <div class="relative mb-2">
+                            <img src="{{ asset('images/tandatanya.png') }}" class="w-32 h-auto opacity-90">
+                        </div>
+                        <h2 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight leading-tight text-center">No Order History</h2>
+                        <p class="font-sans font-normal text-base text-gray-600 leading-relaxed max-w-[210px] text-center mt-2 mx-auto">Orders that you have paid for will appear here.</p>
                     </div>
                     <div class="mt-auto w-full pt-10"></div>
                 </div>
             @endif
         </div>
+    </div>
 
     {{-- MODAL VALIDASI NAMA --}}
     <div id="modal-validation" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true">
@@ -225,7 +353,7 @@
         <div class="fixed inset-0 z-10 flex items-center justify-center p-6">
             <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl transform transition-all scale-100">
                 <div class="flex items-start justify-between mb-4">
-                    <x-text variant="h2" class="text-xl font-extrabold text-gray-900">Identitas Kosong</x-text>
+                    <h2 class="font-sans font-medium text-lg md:text-xl text-gray-900">Empty Identity</h2>
                     <button type="button" onclick="closeModal()" class="rounded-full p-1 text-gray-400 hover:bg-gray-100 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -234,19 +362,19 @@
                 </div>
 
                 <div class="mb-6">
-                    <x-text variant="body" color="secondary" class="leading-relaxed mb-4">
-                        Mohon maaf, nama pemesan wajib diisi agar dapur kami tidak bingung. Silakan isi namamu di bawah ini:
-                    </x-text>
-                    <input type="text" id="modal_customer_name" placeholder="Nama Kamu" value="{{ session('customer_name') }}" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:border-[#FF4647] bg-gray-50 mb-1" minlength="2">
-                    <p id="modal_name_error" class="hidden text-red-500 text-xs font-medium ml-1">Nama minimal 2 karakter.</p>
+                    <p class="font-sans font-medium text-base text-gray-600 mb-4">
+                        Sorry, the customer name is required so our kitchen doesn't get confused. Please enter your name below:
+                    </p>
+                    <input type="text" id="modal_customer_name" placeholder="Your Name" value="{{ session('customer_name') }}" class="w-full border-gray-400 rounded-lg px-4 py-3 focus:border-[#FF4647] bg-gray-50 mb-1" minlength="2">
+                    <p id="modal_name_error" class="hidden text-red-500 text-xs font-medium ml-1">Name must be at least 2 characters.</p>
                 </div>
 
                 <footer class="flex flex-col gap-3">
-                    <x-button type="button" variant="primary" class="w-full h-12 font-bold" id="btn-submit-name" onclick="submitNameAndCheckout()">
-                        Lanjut Checkout
+                    <x-button type="button" variant="primary" class="w-full h-12 font-semibold" id="btn-submit-name" onclick="submitNameAndCheckout()">
+                        Continue
                     </x-button>
-                    <button type="button" onclick="closeModal()" class="text-sm font-semibold text-gray-400 py-2 hover:text-gray-600 transition">
-                        Nanti Saja
+                    <button type="button" onclick="closeModal()" class="text-sm font-semibold text-gray-600 py-2 hover:text-gray-600 transition">
+                        Later
                     </button>
                 </footer>
             </div>

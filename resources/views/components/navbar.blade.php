@@ -7,7 +7,7 @@
     'logo' => false
 ])
 
-<header class="flex items-center justify-between px-5 h-[56px] sticky top-0 z-50 bg-white border-b-[1.5px] border-[#e9e9e9]">
+<header class="flex items-center justify-between px-4 h-[56px] sticky top-0 z-50 bg-white border-b-[1.5px] border-[#e9e9e9]">
     <!-- KIRI (Back Button) -->
     @if ($showBack)
         <a href="{{ $backUrl }}" class="w-10 h-10 flex items-center justify-center text-gray-800 hover:bg-gray-50 transition rounded-full shrink-0">

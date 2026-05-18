@@ -19,18 +19,18 @@
         </div>
 
         {{-- Level 2: Section Title --}}
-        <x-text variant="h2" class="mb-2 text-gray-900">
+        <h2 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight mb-2 block">
             Menunggu Pembayaran
-        </x-text>
+        </h2>
 
         {{-- Level 4: Body --}}
-        <x-text variant="body" color="secondary" class="mb-8 leading-relaxed">
+        <p class="font-sans font-medium text-sm text-gray-600 leading-relaxed mb-8">
             Jangan tutup halaman ini. Popup pembayaran akan muncul secara otomatis dalam beberapa saat.
-        </x-text>
+        </p>
         
         {{-- Action Button --}}
-        <x-button id="pay-button" variant="primary" class="w-full h-[52px] text-sm font-bold rounded-2xl tracking-wide">
-            KLIK JIKA POPUP TIDAK MUNCUL
+        <x-button id="pay-button" variant="primary" class="w-full h-[52px] text-base font-semibold rounded-2xl tracking-wide">
+            Klik Jika Popup Tidak Muncul
         </x-button>
 
     </div>
@@ -39,25 +39,27 @@
     {{-- Inject Midtrans Snap Logic ke akhir body --}}
     <x-slot name="footerScripts">
         <script type="text/javascript">
-            const successUrl  = "{{ route('order.success', ['id' => $order->id ?? 0]) }}";
-            const trackUrl    = "{{ route('order.track', ['id' => $order->id ?? 0]) }}";
-            const checkoutUrl = "{{ route('checkout') }}";
+            const successUrl    = "{{ route('order.success', ['id' => $order->id ?? 0]) }}";
+            const pendingHubUrl = "{{ route('order.pending-cash', ['id' => $order->id ?? 0]) }}";
 
             function triggerSnap() {
                 snap.pay('{{ $snapToken }}', {
                     onSuccess: function(result) {
+                        // Bayar berhasil -> halaman konfirmasi sukses
                         window.top.location.href = successUrl;
                     },
                     onPending: function(result) {
-                        window.top.location.href = trackUrl;
+                        // Midtrans masih proses -> kembali ke Universal Hub
+                        window.top.location.href = pendingHubUrl;
                     },
                     onError: function(result) {
-                        alert('Pembayaran gagal. Silakan coba lagi.');
-                        window.top.location.href = checkoutUrl;
+                        // Terjadi error -> kembali ke Universal Hub untuk coba lagi
+                        window.top.location.href = pendingHubUrl;
                     },
                     onClose: function() {
-                        alert('Pembayaran belum selesai. Pesananmu tersimpan di riwayat.');
-                        window.top.location.href = checkoutUrl;
+                        // User menutup popup tanpa bayar -> kembali ke Universal Hub
+                        // Tidak ada alert, tidak ada looping
+                        window.top.location.href = pendingHubUrl;
                     }
                 });
             }

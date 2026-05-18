@@ -24,9 +24,9 @@
         {{ $headScripts }}
     @endif
 </head>
-<body class="bg-[#F8F9FA] antialiased text-gray-900 {{ $isCartEmpty ? 'min-h-screen' : '' }}">
+<body class="bg-white antialiased text-gray-900 {{ $isCartEmpty ? 'min-h-screen' : '' }}">
     
-    <div class="w-full max-w-[480px] mx-auto bg-[#ffffff] shadow-2xl relative flex flex-col min-h-screen">
+    <div class="w-full max-w-[480px] mx-auto bg-white shadow-xl relative flex flex-col min-h-screen">
         {{ $slot }}
     </div>
 

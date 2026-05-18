@@ -75,7 +75,7 @@ class MenuController extends Controller
         'type'        => 'nullable|string', 
         'description' => 'nullable|string',
         'price'       => 'required|numeric|min:0',
-        'image'       => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'image'       => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
         'status_stok' => 'required|string',
     ]);
 

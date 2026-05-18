@@ -12,10 +12,57 @@
 
     <x-navbar title="Payment" showBack="true" backUrl="{{ route('checkout') }}" />
 
-    <main class="flex-1 pb-[180px]">
-        {{-- SECTION 1: RINGKASAN PRODUK --}}
-        <div class="px-5 mt-6 border-b-[6px] border-gray-50 pb-6">
-            <x-text variant="h2" class="text-lg font-semibold mb-4">Detail Pesanan</x-text>
+    <main class="flex-1 pb-[120px]">
+        {{-- SECTION 1: CUSTOMER INFO --}}
+        <div class="mb-4 px-5 mt-4">
+            <h2 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight block mb-3">Customer Information</h2>
+            
+            {{-- GRID CONTAINER: Membagi ruang menjadi 2 kolom dengan jarak (gap-3) --}}
+<div class="flex gap-3 w-full">
+    
+    {{-- KARTU KIRI: DATA CUSTOMER --}}
+    <div class="w-1/2 bg-white border-[1.5px] border-gray-300 rounded-lg flex flex-col overflow-hidden h-[74px]">
+        {{-- Header Boks: Warna Abu-abu Terang (bg-gray-100) setinggi 32px --}}
+        <div class="bg-gray-100 h-[32px] flex items-center px-3 border-b border-gray-300">
+            <span class="font-sans font-medium text-sm text-gray-600 block">
+                Customer
+            </span>
+        </div>
+        
+        {{-- Content Area: Tempat menampilkan nama, warna teks abu-abu gelap --}}
+        <div class="flex-1 flex items-center px-3 bg-transparent">
+            <span id="display_customer_name" class="font-sans font-semibold text-sm text-gray-900 capitalize block">
+                {{ $customerName }}
+            </span>
+        </div>
+    </div>
+
+    {{-- KARTU KANAN: DATA MEJA --}}
+    <div class="w-1/2 bg-white border-[1.5px] border-gray-300 rounded-lg flex flex-col overflow-hidden h-[74px]">
+        {{-- Header Boks: Warna Abu-abu Terang (bg-gray-100) setinggi 32px --}}
+        <div class="bg-gray-100 h-[32px] flex items-center px-3 border-b border-gray-300">
+            <span class="font-sans font-medium text-sm text-gray-600 block">
+                Table
+            </span>
+        </div>
+        
+        {{-- Content Area: Tempat menampilkan nomor meja, warna teks abu-abu gelap --}}
+        <div class="flex-1 flex items-center px-3 bg-transparent">
+            <span class="font-sans font-semibold text-sm text-gray-900 block">
+                T-{{ $tableNumStr }}
+            </span>
+        </div>
+    </div>
+
+</div>
+                
+                {{-- Hidden Input tetap dipertahankan untuk backend --}}
+                <input type="hidden" id="input_customer_name" name="customer_name" value="{{ $customerName }}">
+            </div>
+            
+            {{-- SECTION 2: RINGKASAN PRODUK --}}
+        <div class="px-5 mt-4">
+            <h2 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight mb-4 block">Order Details</h2>
 
             <div class="space-y-4">
                 @forelse($cartItems as $id => $item)
@@ -45,114 +92,92 @@
                         </div>
 
                         {{-- Info Produk --}}
-                        <div class="flex-1 min-w-0 flex justify-between gap-2">
+                        <div class="flex-1 min-w-0 flex justify-between items-start gap-4">
+                            {{-- Sisi Kiri: Nama & Varian --}}
                             <div class="flex flex-col">
-                                <x-text variant="body" class="font-bold text-gray-900">{{ $cleanName }}</x-text>
+                                <h3 class="font-sans font-semibold text-sm md:text-base text-gray-900 block leading-tight">
+                                    {{ $cleanName }}
+                                </h3>
                                 @if($displayVariant)
-                                    <x-text variant="caption" color="secondary" class="text-gray-500 font-medium mt-0.5">{{ $displayVariant }}</x-text>
+                                    <span class="font-sans font-medium text-xs capitalize text-gray-600 mt-1 block">
+                                        {{ $displayVariant }}
+                                    </span>
                                 @endif
-                                <x-text variant="caption" color="secondary" class="text-gray-400 font-normal mt-1">
-                                    {{ $item['qty'] ?? 1 }} x Rp{{ number_format($item['price'] ?? 0, 0, '.', '.') }}
-                                </x-text>
                             </div>
                             
-                            <x-text variant="body" class="font-semibold text-gray-900 whitespace-nowrap text-right">
-                                Rp{{ number_format(($item['price'] ?? 0) * ($item['qty'] ?? 1), 0, '.', '.') }}
-                            </x-text>
+                            {{-- Sisi Kanan: Hanya Qty --}}
+                            <span class="font-sans font-medium text-gray-600 text-xs whitespace-nowrap text-right">
+                                {{ $item['qty'] ?? 1 }}x
+                            </span>
                         </div>
                     </div>
                 @empty
-                    <x-text variant="body" color="secondary" class="italic">Keranjang kosong</x-text>
+                    <p class="font-sans font-normal text-sm text-gray-500 leading-relaxed italic">Empty your order</p>
                 @endforelse
             </div>
-        </div>
-
-        <form id="paymentForm" action="{{ route('process-checkout') }}" method="POST" class="px-5 mt-3 space-y-8">
-            @csrf
-            
-            {{-- SECTION 2: CUSTOMER INFO --}}
-            <div class="border-b-[6px] border-gray-50 pb-4">
-                <x-text variant="h2" class="text-lg font-semibold mb-4 block">Informasi Pelanggan</x-text>
-                
-                <div class="flex items-center gap-4 py-3">
-    {{-- Icon Orang: Langsung tanpa pembungkus bulat --}}
-    <div class="text-gray-900 shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-        </svg>
-    </div>
-
-    <div class="flex-1">
-        {{-- Label: Menggunakan hirarki caption (Level 5) --}}
-        <x-text variant="caption" color="secondary" class="capitalize tracking-tight font-bold block">
-            Pemesan
-        </x-text>
-        {{-- Value: Menggunakan hirarki body (Level 4) --}}
-        <x-text variant="body" id="display_customer_name" class="font-bold capitalize tracking-wide">
-            {{ $customerName }}
-        </x-text>
-    </div>
-</div>
-
-                <div class="flex items-center gap-4 py-3">
-    {{-- Icon Meja: Langsung tanpa pembungkus bulat & warna Hitam --}}
-    <div class="text-gray-900 shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5h18M6 16.5v-1.5a6 6 0 0112 0v1.5M12 4.5v3M10.5 4.5h3" />
-        </svg>
-    </div>
-
-    <div class="flex-1">
-        <div>
-            {{-- Label: Menggunakan hirarki caption (Level 5) --}}
-            <x-text variant="caption" color="secondary" class="capitalize tracking-tight font-bold block text-[10px]">
-                Meja
-            </x-text>
-            {{-- Value: Menggunakan hirarki body (Level 4) --}}
-            <x-text variant="body" class="font-bold">
-                Nomor {{ $tableNumStr }}
-            </x-text>
-        </div>
-    </div>
-</div>
-                {{-- Input tersembunyi yang dibutuhkan di backend --}}
-                <input type="hidden" id="input_customer_name" name="customer_name" value="{{ $customerName }}">
+            <div class="mt-4">
+                <x-button 
+                    type="button" 
+                    variant="secondary"
+                    onclick="window.location.href='{{ session('table_hash') ? url('/scan/' . session('table_hash') . '?force_menu=1') : url('/') }}'"
+                    class="flex items-center gap-2 px-5 py-2.5 !h-[34px] !rounded-lg border border-[1.5px] border-[#FF4647] !bg-transparent text-[#FF4647] active:bg-gray-50 !shadow-none w-auto inline-flex">
+                    
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    
+                    <span class="font-sans font-medium text-xs">Add more items</span>
+                </x-button>
             </div>
+        </div>
+
+        <form id="paymentForm" action="{{ route('process-checkout') }}" method="POST" class="px-5 space-y-6">
+            @csrf
 
             {{-- SECTION: RINGKASAN PEMBAYARAN --}}
-            <div class="px-5 pb-6 border-b-[6px] border-gray-50 mb-6 -mx-5 px-5">
-                <x-text variant="h2" class="text-lg font-semibold mb-4 block">Ringkasan Pembayaran</x-text>
-                
-                <div class="flex justify-between items-center mb-2">
-                    <x-text variant="body" color="secondary">Total Harga</x-text>
-                    <x-text variant="body" class="font-bold">Rp{{ number_format($cartTotalPrice, 0, '.', '.') }}</x-text>
-                </div>
-                
-                <div class="flex justify-between items-center mb-2">
-                    <x-text variant="body" color="secondary">Pajak (0%)</x-text>
-                    <x-text variant="body" class="font-bold">Rp0</x-text>
-                </div>
-
-                <div class="border-t border-gray-100 my-3"></div>
-
-                <div class="flex justify-between items-center">
-                    <x-text variant="body" class="font-bold">Total Bayar</x-text>
-                    <x-text variant="h2" class="text-[#FF4647] !font-bold">Rp{{ number_format($cartTotalPrice, 0, '.', '.') }}</x-text>
-                </div>
+<div>
+    {{-- Teks Judul Utama (Tetap Berada di Luar Card Tanpa Tambahan Apapun) --}}
+    <h2 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight mb-3 block">Payment Summary</h2>
+    
+    {{-- Card Wrapper Utama (Border Gray 300 1.5px dengan Overflow Hidden) --}}
+    <div class="border-[1.5px] border-gray-300 rounded-lg overflow-hidden bg-transparent">
+        
+        {{-- Content Area: Bagian Atas Tanpa Box Gray --}}
+        <div class="p-4 space-y-3 bg-transparent">
+            {{-- Total Price Row --}}
+            <div class="flex justify-between items-center">
+                <span class="font-sans font-normal text-sm text-gray-600">Total Price</span>
+                <span class="font-sans font-medium text-sm text-gray-900">Rp{{ number_format($cartTotalPrice, 0, '.', '.') }}</span>
             </div>
+            
+            {{-- Fee Row --}}
+            <div class="flex justify-between items-center">
+                <span class="font-sans font-normal text-sm text-gray-600">Fee (0%)</span>
+                <span class="font-sans font-medium text-sm text-gray-900">Rp0</span>
+            </div>
+        </div>
+
+        {{-- REVISI UTAMA: Box Abu-abu (bg-gray-100) setinggi 45px sekarang membungkus Total Payment di bagian bawah --}}
+        <div class="bg-gray-100 px-4 h-[45px] flex items-center justify-between border-t border-gray-300">
+            <span class="font-sans font-semibold text-sm text-gray-900">Total Payment</span>
+            <span class="font-sans font-semibold text-sm text-gray-900">Rp{{ number_format($cartTotalPrice, 0, '.', '.') }}</span>
+        </div>
+        
+    </div>
+</div>
 
             {{-- SECTION 3: PAYMENT METHOD --}}
             <div>
     {{-- Judul Seksi: Level 2 --}}
-    <x-text variant="h2" class="mb-1 block">Metode Pembayaran</x-text>
+    <h2 class="font-sans font-semibold text-lg md:text-xl text-gray-900 tracking-tight mb-2 block">Payment Method</h2>
     
     <div class="flex flex-col">
         {{-- Opsi 1: QRIS --}}
         <label class="cursor-pointer group relative block">
             <input type="radio" name="payment_method" value="QRIS" class="peer sr-only" checked>
             
-            <div class="py-4 flex items-center justify-between transition-all">
-                <div class="flex items-center gap-4">
+            <div class="py-2 flex items-center justify-between transition-all">
+                <div class="flex items-center gap-1">
                     {{-- Icon Container: BG dihapus, warna tetap abu-abu --}}
                     <div class="w-10 h-10 flex items-center justify-center shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3m5 0v.01M12 7v3a2 2 0 0 1-2 2H7m-4 0h.01M12 3h.01M12 16v.01M16 12h1m4 0v.01M12 21v-1"/></g></svg>
@@ -160,27 +185,27 @@
 
                     {{-- Label & Deskripsi: Teks tidak berubah warna --}}
                     <div class="flex flex-col">
-                        <x-text variant="body" class="font-bold text-gray-900">QRIS</x-text>
-                        <x-text variant="caption" color="secondary">Scan pakai e-wallet atau m-banking</x-text>
+                        <span class="font-sans font-medium text-sm md:text-base text-gray-900 block">QRIS</span>
+                        <span class="font-sans font-medium text-xs capitalize text-gray-600 block">Scan using e-wallet or m-banking</span>
                     </div>
                 </div>
 
                 {{-- Indikator Radio (Satu-satunya penanda aktif) --}}
-                <div class="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center shrink-0 ml-4 transition-all group-has-[:checked]:border-[#FF4647]">
-                    <div class="w-3 h-3 rounded-full bg-[#FF4647] scale-0 group-has-[:checked]:scale-100 transition-transform duration-200"></div>
+                <div class="w-4 h-4 rounded-full border-2 border-gray-200 flex items-center justify-center shrink-0 ml-4 transition-all group-has-[:checked]:border-[#FF4647]">
+                    <div class="w-2 h-2 rounded-full bg-[#FF4647] scale-0 group-has-[:checked]:scale-100 transition-transform duration-200"></div>
                 </div>
             </div>
         </label>
 
         {{-- Divider Halus --}}
-        <div class="border-b border-gray-100 w-full"></div>
+        <div class="w-full"></div>
 
         {{-- Opsi 2: Bayar Kasir --}}
         <label class="cursor-pointer group relative block">
             <input type="radio" name="payment_method" value="Cashier" class="peer sr-only">
             
-            <div class="py-4 flex items-center justify-between transition-all">
-                <div class="flex items-center gap-4">
+            <div class="py-2 flex items-center justify-between transition-all">
+                <div class="flex items-center gap-1">
                     {{-- Icon Container: BG dihapus, warna tetap abu-abu --}}
                     <div class="w-10 h-10 flex items-center justify-center shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-gray-900">
@@ -190,14 +215,14 @@
 
                     {{-- Label & Deskripsi: Teks tidak berubah warna --}}
                     <div class="flex flex-col">
-                        <x-text variant="body" class="font-bold text-gray-900">Bayar Kasir</x-text>
-                        <x-text variant="caption" color="secondary">Bayar ke kasir untuk konfirmasi pesanan</x-text>
+                        <span class="font-sans font-medium text-sm md:text-base text-gray-900 block">Pay the Cashier</span>
+                        <span class="font-sans font-medium text-xs capitalize text-gray-600 block">Cash only</span>
                     </div>
                 </div>
 
                 {{-- Indikator Radio (Satu-satunya penanda aktif) --}}
-                <div class="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center shrink-0 ml-4 transition-all group-has-[:checked]:border-[#FF4647]">
-                    <div class="w-3 h-3 rounded-full bg-[#FF4647] scale-0 group-has-[:checked]:scale-100 transition-transform duration-200"></div>
+                <div class="w-4 h-4 rounded-full border-2 border-gray-200 flex items-center justify-center shrink-0 ml-4 transition-all group-has-[:checked]:border-[#FF4647]">
+                    <div class="w-2 h-2 rounded-full bg-[#FF4647] scale-0 group-has-[:checked]:scale-100 transition-transform duration-200"></div>
                 </div>
             </div>
         </label>
@@ -208,7 +233,7 @@
 
     <x-bottom-bar>
         <x-button type="submit" form="paymentForm" variant="primary" class="w-full text-base font-semibold tracking-tight h-[52px]">
-            Bayar Sekarang
+            Pay now
         </x-button>
     </x-bottom-bar>
 

@@ -8,14 +8,32 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
-use Carbon\Carbon; // Pastikan Carbon di-import
+use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
-    public function index()
-    {
-        $tables = Table::all();
-        return view('welcome', compact('tables'));
+    public function index() {
+    // 1. Ambil parameter tanggal dari URL, jika tidak ada gunakan tanggal hari ini
+    $selectedDate = request()->query('date', \Carbon\Carbon::now()->format('Y-m-d'));
+    
+    // 2. Ambil parameter jam dari URL. 
+    // WAJIB Berikan nilai default (misal '10:00') agar saat halaman pertama dimuat, 
+    // sistem langsung mengecek ketersediaan meja pada jam operasional pertama tersebut.
+    $selectedTime = request()->query('time', '10:00'); 
+
+    // 3. Ambil semua ID meja yang sudah di-booking pada jadwal tersebut
+    $bookedTableIds = Reservation::where('reservation_date', $selectedDate)
+        // Menggunakan LIKE untuk mengantisipasi perbedaan format detik (:00) di database
+        ->where('reservation_time', 'LIKE', $selectedTime . '%')
+        ->whereIn('status', ['pending', 'confirmed'])
+        ->pluck('table_id')
+        ->toArray();
+
+    // 4. Ambil semua data meja
+    $tables = Table::all();
+
+    // 5. Kirim data ke view welcome
+    return view('welcome', compact('tables', 'bookedTableIds'));
     }
 
     public function store(Request $request)
@@ -31,11 +49,8 @@ class ReservationController extends Controller
         ]);
 
         // --- TAMBALAN LOGIKA: VALIDASI WAKTU REAL-TIME ---
-        
-        // Gabungkan tanggal dan jam input menjadi satu objek Carbon
         $inputDateTime = Carbon::parse($request->reservation_date . ' ' . $request->reservation_time);
         
-        // Cek apakah waktu yang dipilih sudah lewat dari waktu server saat ini
         if ($inputDateTime->isPast()) {
             return response()->json([
                 'success' => false,
@@ -44,7 +59,6 @@ class ReservationController extends Controller
         }
 
         // --- MULAI LOGIKA ANTI-BUG (PENCEGAHAN BENTROK) ---
-        
         $isBooked = Reservation::where('table_id', $request->table_id)
             ->where('reservation_date', $request->reservation_date)
             ->where('reservation_time', $request->reservation_time)
@@ -57,8 +71,6 @@ class ReservationController extends Controller
                 'message' => 'Maaf, Meja ' . $request->table_id . ' sudah dipesan untuk jadwal tersebut. Silakan pilih waktu atau meja lain.'
             ], 400);
         }
-
-        // --- SELESAI LOGIKA ANTI-BUG ---
 
         // 2. Logika Generate Kode Booking Unik
         $bookingCode = 'BOOKING-' . strtoupper(Str::random(5));
@@ -117,7 +129,6 @@ class ReservationController extends Controller
     {
         $reservation = Reservation::with('table')->where('booking_code', $id)->firstOrFail();
         
-        // Mencegah Race Condition: Jika DB masih pending padahal user sudah bayar
         if (!in_array($reservation->payment_status, ['paid', 'settlement'])) {
             try {
                 \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
@@ -142,14 +153,34 @@ class ReservationController extends Controller
     public function pending($id)
     {
         $reservation = Reservation::where('booking_code', $id)->firstOrFail();
+
+        // Amankan Logika Kadaluarsa: Jika melewati 15 menit, lempar langsung ke home dengan alert
+        if ($reservation->status === 'pending' && Carbon::parse($reservation->created_at)->addMinutes(1)->isPast()) {
+            $reservation->update([
+                'status' => 'cancelled',
+                'payment_status' => 'expire'
+            ]);
+            
+            return redirect('/')->with('booking_timeout', 'Time out, bestie! You missed the payment window, so we had to release your table. Better luck next time!');
+        }
+
         if (in_array($reservation->payment_status, ['paid', 'settlement'])) {
             return redirect()->route('reserve.success', $id);
         }
+
         return view('reservation.pending', compact('reservation'));
     }
 
     public function adminIndex()
     {
+        // Otomatis bersihkan data menggantung di database saat admin memuat dashboard
+        Reservation::where('status', 'pending')
+            ->where('created_at', '<', Carbon::now()->subMinutes(1))
+            ->update([
+                'status' => 'cancelled',
+                'payment_status' => 'expire'
+            ]);
+
         $reservations = Reservation::with('table')->orderBy('reservation_date', 'asc')->get();
         return view('admin.reservations.index', compact('reservations'));
     }

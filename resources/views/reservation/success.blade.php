@@ -1,96 +1,131 @@
-<x-layout title="Reservasi Berhasil | Njajan++">
+<x-layout title="Njajan++ | Reservation Success">
     <style>
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .bg-gray-50\/30 { background: #f9fafb !important; }
-            .bg-white\/60 { background: #ffffff !important; }
-            .print-border { border: 1px solid #f3f4f6 !important; }
-            #print-area { margin-top: 2rem; width: 100% !important; max-width: none !important; }
+            .print-border { border: 1.5px solid #D1D5DB !important; }
+            #print-area { margin-top: 2rem; width: 100% !important; max-w: none !important; }
         }
     </style>
 
-    <div class="w-full flex flex-col h-[100dvh] bg-gray-50 overflow-hidden relative">
+    {{-- Container Utama --}}
+    <div class="w-full min-h-screen bg-white relative">
 
-        <main class="flex-1 w-full flex flex-col px-6 py-6 overflow-y-auto no-scrollbar">
+        {{-- Main Content --}}
+        <main class="w-full flex flex-col px-4 pt-6 pb-40">
 
-            <div class="w-full mt-auto space-y-6 max-w-sm mx-auto" id="print-area">
+            {{-- Grid Margin Wrapper --}}
+            <div class="w-full mt-8 space-y-6 max-w-sm mx-auto" id="print-area">
                 
-                {{-- Icon & Heading --}}
-                <div class="w-full text-center pb-4 pt-8">
-                    <div class="mb-5 flex justify-center">
-                        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                {{-- Icon + Heading --}}
+                <div class="w-full text-center">
+                    {{-- Wrapper Ikon Lingkaran --}}
+                    <div class="mb-4 flex justify-center no-print">
+                        <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center border-2 border-green-100 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
                     </div>
-                    <x-text variant="h1" class="mb-2 text-2xl capitalize tracking-tight">Reservasi Berhasil</x-text>
-                    <x-text variant="body" color="secondary" class="text-sm">Meja Anda telah berhasil dibooking secara sistem.</x-text>
+
+                    {{-- Teks Info Utama --}}
+                    <span class="font-sans font-medium text-sm text-gray-600 block mb-2">
+                        #{{ $reservation->booking_code }}
+                    </span>
+                    <h1 class="font-sans font-semibold text-lg md:text-xl text-gray-900 capitalize block">
+                        Reservation Confirmed
+                    </h1>
+                    <p class="font-sans font-normal text-sm text-gray-600 leading-relaxed">
+                        Your table has been successfully secured
+                    </p>
                 </div>
 
-                {{-- Alert Info --}}
-                <div class="w-full bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex gap-3 items-start no-print">
-                    <svg class="w-5 h-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <x-text variant="caption" class="!text-blue-800 text-[11px] leading-relaxed font-semibold">
-                        Screenshot bukti ini untuk ditunjukkan ke kasir saat datang ke <span class="underline">Njajan.co++</span>.
-                    </x-text>
+                {{-- Info box --}}
+                <div class="w-full bg-gray-100 border border-gray-300 rounded-xl px-3 py-3 flex gap-3 items-start no-print">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+                    </svg>
+                    <p class="font-sans font-medium text-xs text-gray-900 leading-relaxed">
+                        Please screenshot or print this receipt to show the cashier upon your arrival at <span class="underline">Njajan.co++</span>.
+                    </p>
                 </div>
 
-                {{-- Detail Card: Menggunakan style yang sama dengan halaman sebelumnya --}}
-                <div class="bg-white rounded-lg border border-gray-100 p-5 shadow-sm space-y-4">
-                    <div class="flex justify-between items-center pb-4 border-b border-gray-50">
-                        <x-text variant="caption" color="secondary" class="font-bold capitalize text-xs">Kode Booking</x-text>
-                        <x-text variant="h4" class="font-black tracking-widest text-[#FF4647] uppercase">
-                            {{ $reservation->booking_code }}
-                        </x-text>
-                    </div>
-
-                    <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <x-text variant="caption" color="secondary" class="font-medium text-xs">Nama Pelanggan</x-text>
-                            <x-text variant="caption" color="primary" class="font-bold capitalize">{{ $reservation->name }}</x-text>
+                {{-- Detail Section --}}
+                <div class="px-0 !mt-4">
+                    {{-- Card Wrapper Utama --}}
+                    <div class="border-[1.5px] border-gray-300 rounded-xl overflow-hidden print-border">
+                        
+                        {{-- Header: Summary --}}
+                        <div class="bg-gray-100 p-4 h-[45px] flex items-center border-b border-gray-300">
+                            <h2 class="font-sans font-medium text-sm md:text-base text-gray-900 tracking-tight block">Reservation Summary</h2>
                         </div>
 
-                        <div class="flex justify-between">
-                            <x-text variant="caption" color="secondary" class="font-medium text-xs">Nomor Meja</x-text>
-                            <x-text variant="caption" class="font-black text-[#5D1525]">
-                                Meja {{ $reservation->table->number ?? '-' }}
-                            </x-text>
-                        </div>
-
-                        <div class="flex justify-between">
-                            <x-text variant="caption" color="secondary" class="font-medium text-xs">Jumlah Tamu</x-text>
-                            <x-text variant="caption" color="primary" class="font-bold">{{ $reservation->guests }} Orang</x-text>
-                        </div>
-
-                        <div class="mt-4 p-3 bg-gray-50/50 rounded-xl space-y-1">
+                        {{-- Content Area --}}
+                        <div class="bg-transparent p-4 space-y-3">
+                            {{-- Info Status --}}
                             <div class="flex justify-between items-center">
-                                <x-text variant="caption" color="secondary" class="font-bold">Jadwal Kedatangan</x-text>
-                                <div class="text-right">
-                                    <x-text variant="caption" color="primary" class="block font-black">
-                                        {{ \Carbon\Carbon::parse($reservation->reservation_date)->format('d M Y') }}
-                                    </x-text>
-                                    <x-text variant="caption" color="primary" class="block font-medium text-[10px]">
-                                        {{ \Carbon\Carbon::parse($reservation->reservation_time)->format('H:i') }} WIB
-                                    </x-text>
-                                </div>
+                                <span class="font-sans font-normal text-sm text-gray-600">Booking status</span>
+                                <span class="font-sans font-medium text-sm text-green-600">Success / Paid</span>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="font-sans font-normal text-sm text-gray-600">Customer</span>
+                                <span class="font-sans font-medium text-sm text-gray-900 capitalize">{{ $reservation->name }}</span>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="font-sans font-normal text-sm text-gray-600">Table Number</span>
+                                <span class="font-sans font-black text-[#FF4647] text-sm">Table {{ $reservation->table->number ?? '-' }}</span>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="font-sans font-normal text-sm text-gray-600">Guests</span>
+                                <span class="font-sans font-medium text-sm text-gray-900">{{ $reservation->guests }} People</span>
+                            </div>
+
+                            {{-- PEMISAH DASHED --}}
+                            <div class="border-t-[1.5px] border-dashed border-gray-300 my-4"></div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="font-sans font-normal text-sm text-gray-600">Arrival Date</span>
+                                <span class="font-sans font-medium text-sm text-gray-900">{{ \Carbon\Carbon::parse($reservation->reservation_date)->format('d M Y') }}</span>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="font-sans font-normal text-sm text-gray-600">Arrival Time</span>
+                                <span class="font-sans font-medium text-sm text-gray-900">{{ \Carbon\Carbon::parse($reservation->reservation_time)->format('H:i') }} WIB</span>
                             </div>
                         </div>
+
+                        {{-- Footer Card --}}
+                        <div class="bg-gray-100 p-4 h-[45px] flex items-center justify-between border-t border-gray-300">
+                            <span class="font-sans font-medium text-sm text-gray-900">Service Type</span>
+                            <span class="font-sans font-medium text-sm text-gray-900">Table Pre-Booking</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Button Group: Posisikan di bawah dengan mt-auto --}}
-            <div class="w-full space-y-3 mt-auto pt-8 max-w-sm mx-auto no-print">
-                <x-button type="button" variant="primary" class="w-full text-base font-semibold tracking-tight h-[52px] !shadow-none" onclick="window.print()">
-                    Cetak Bukti Reservasi
-                </x-button>
+            {{-- BUTTONS ACTION --}}
+            <x-bottom-bar class="no-print">
+                <div class="w-full space-y-3 mt-auto max-w-sm mx-auto">
+                    <x-button 
+                        type="button" 
+                        variant="primary" 
+                        class="w-full text-base font-semibold tracking-tight h-[52px] !shadow-none" 
+                        onclick="window.print()">
+                        Print Reservation Receipt
+                    </x-button>
 
-                <x-button type="button" onclick="window.location.href='{{ url('/') }}'" variant="secondary" class="w-full flex items-center justify-center h-[52px] rounded-lg transition active:scale-95 bg-transparent border border-red-100 text-[#FF4647] hover:bg-red-50 font-semibold shadow-none">
-                    Kembali ke Beranda
-                </x-button>
-            </div>
+                    <x-button 
+                        type="button" 
+                        onclick="window.location.href='{{ url('/') }}'" 
+                        variant="secondary" 
+                        class="w-full flex items-center justify-center h-[52px] rounded-lg transition active:scale-95 bg-transparent border border-[#FF4647] text-[#FF4647] hover:bg-gray-100 font-semibold shadow-none">
+                        Back to Home
+                    </x-button>
+                </div>
+            </x-bottom-bar>
 
         </main>
     </div>

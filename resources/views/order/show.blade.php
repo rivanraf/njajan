@@ -13,13 +13,13 @@
                /* ANIMATION BASE */
                transition-all duration-500 transform scale-100 opacity-100">
         
-        <div class="bg-green-500 p-1 rounded-full text-white shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-[clamp(0.8rem,2.5vw,1rem)] h-[clamp(0.8rem,2.5vw,1rem)]" viewBox="0 0 20 20" fill="currentColor">
+        <div class="bg-green-400 p-0.5 rounded-full text-white shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
             </svg>
         </div>
 
-        <span class="text-[clamp(0.7rem,2.5vw,0.85rem)] font-medium text-gray-800 tracking-tight leading-none">
+        <span class="text-xs font-semibold text-gray-900 leading-none">
             {{ session('success') }}
         </span>
     </div>
@@ -30,7 +30,7 @@
             $tableHash = session('table_hash') ?? request()->cookie('table_hash');
             $backUrl = $tableHash ? route('scan.qr', $tableHash) : 'javascript:history.back()';
         @endphp
-        <x-navbar title="Detail" showBack="true" backUrl="{{ $backUrl }}" showCart="true" />
+        <x-navbar title="Details" showBack="true" backUrl="{{ $backUrl }}" showCart="true" />
 
         <form id="addToCartForm" action="{{ route('add-to-cart', $menu->id) }}" method="POST" class="flex flex-col flex-1 relative">
             @csrf
@@ -53,37 +53,66 @@
             </div>
 
             <!-- VERTICAL STACK CONTAINER -->
-            <div class="flex flex-col px-4 py-6">
+            <div class="flex flex-col px-4 py-3">
                 <!-- TITLE & PRICE -->
-                <div class="flex items-baseline justify-between gap-4 mb-2">
+                <div class="flex items-baseline justify-between gap-4 mb-4">
                     {{-- Nama Menu (Sisi Kiri) --}}
-                    <x-text variant="h2" color="primary" class="!text-lg font-semibold">
+                    <h1 class="font-sans font-semibold text-base md:text-base text-gray-900 tracking-tight">
                         {{ $menu->name }}
-                    </x-text>
+                    </h1>
 
                     {{-- Harga (Sisi Kanan) --}}
-                    <x-text variant="price" color="primary" class="text-base font-bold whitespace-nowrap">
+                    <span class="font-sans font-medium text-gray-900 text-base whitespace-nowrap">
                         Rp{{ number_format($menu->price, 0, '.', '.') }}
-                    </x-text>
+                    </span>
                 </div>
 
                 <!-- DESKRIPSI -->
-                <div class="mb-4 pb-4 border-b-[6px] border-gray-50 -mx-5 px-5">
-                    <x-text variant="caption" color="secondary" class="text-xs font-normal leading-relaxed">
-                        {{ $menu->description ?? 'Kentang pilihan yang dipotong tebal dan digoreng hingga renyah di luar, lembut di dalam. Disajikan hangat dengan taburan bumbu gurih dan saus pilihan yang bikin nagih di setiap gigitan.' }}
-                    </x-text>
+                <div class="mb-4">
+                    {{-- Container utama menggunakan inline agar tombol bisa menyambung teks --}}
+                    <div id="descContainer" class="font-sans font-normal text-sm text-gray-600 leading-relaxed overflow-hidden">
+                        <span id="descText" class="line-clamp-3">
+                            {{ $menu->description ?? 'Deskripsi belum tersedia' }}
+                        </span>
+                        
+                        @if(isset($menu->description) && strlen($menu->description) > 100)
+                            <button onclick="toggleDescription(this)" 
+                                    id="readMoreBtn" 
+                                    class="text-[#FF4647] text-xs font-semibold focus:outline-none">
+                                Read More
+                            </button>
+                        @endif
+                    </div>
                 </div>
+
+                <script>
+                function toggleDescription(btn) {
+                    const textSpan = document.getElementById('descText');
+                    
+                    if (textSpan.classList.contains('line-clamp-3')) {
+                        // Mode: Expand (Lihat Semua)
+                        textSpan.classList.remove('line-clamp-3');
+                        btn.textContent = ' Read Less';
+                        btn.classList.add('block', 'mt-1'); // Pindah ke baris baru saat panjang agar rapi
+                    } else {
+                        // Mode: Clamp (Potong 3 Baris)
+                        textSpan.classList.add('line-clamp-3');
+                        btn.textContent = 'Read More';
+                        btn.classList.remove('block', 'mt-1');
+                    }
+                }
+                </script>
 
                 <!-- VARIAN OPSI -->
                 @if($menu->type)
-                    <div class="mb-4 pb-4 border-b-[6px] border-gray-50 -mx-5 px-5">
+                    <div class="mb-4">
                         <div class="mb-4">
-                        <x-text variant="h3" color="primary" class="mb-3 text-base font-bold capitalize">
-                            Pilih varian
-                        </x-text>
-                        <x-text variant="caption" color="secondary" class="block -mt-0.5 font-medium">
-                            Wajib pilih salah satu
-                        </x-text>
+                        <h2 class="font-sans font-semibold text-base md:text-base text-gray-900 mb-2 capitalize block">
+                            Variant
+                        </h2>
+                        <span class="font-sans font-normal text-xs capitalize text-gray-600 block -mt-0.5">
+                            Must choose one variant
+                        </span>
                         </div>
                         <div id="variant-section" class="flex flex-wrap gap-3 transition-all duration-300 border-2 border-transparent rounded-2xl p-2 -m-2">
                             {{-- Input Hidden untuk menyimpan data ke backend --}}
@@ -100,14 +129,14 @@
                 <!-- CATATAN TEXTAREA -->
                 <div class="mb-4">
                     <div class="mb-4">
-                        <x-text variant="h3" color="primary" class="mb-3 text-base font-bold capitalize">
-                            Catatan
-                        </x-text>
-                        <x-text variant="caption" color="secondary" class="block -mt-0.5 font-medium">
-                            Opsional
-                        </x-text>
+                        <h2 class="font-sans font-semibold text-base md:text-base text-gray-900 mb-2 capitalize block">
+                            Notes
+                        </h2>
+                        <span class="font-sans font-normal text-xs capitalize text-gray-600 block -mt-0.5">
+                            Optional
+                        </span>
                     </div>
-                    <textarea name="notes" rows="4" class="w-full bg-white border border-gray-200 rounded-lg p-4 text-[clamp(0.75rem,2vw,0.813rem)] font-normal focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none transition placeholder:text-gray-400 shadow-sm" placeholder="Tambahkan catatan disini"></textarea>
+                    <textarea name="notes" rows="4" class="w-full bg-white border border-gray-400 rounded-lg p-4 text-[clamp(0.75rem,2vw,0.813rem)] font-normal focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none transition placeholder:text-gray-600 shadow-sm" placeholder="Example: Kasirnya ganteng!"></textarea>
                 </div>
                 </div>
                 </div>
@@ -117,9 +146,9 @@
             <x-bottom-bar>
     <div class="flex justify-between items-center px-1">
         {{-- Harga Total: Menggunakan variant price (Level 3: text-base font-bold) --}}
-        <x-text variant="price" id="bottomPrice">
+        <span id="bottomPrice" class="font-sans font-semibold text-gray-900 text-base">
             Rp{{ number_format($menu->price, 0, '.', '.') }}
-        </x-text>
+        </span>
         
         <div class="flex items-center gap-3">
             {{-- Tombol Minus --}}
@@ -128,9 +157,9 @@
             </button>
             
             {{-- Input Qty: Menggunakan variant body dengan penambahan font-semibold (Level 4) --}}
-            <x-text variant="body" class="font-semibold w-4 text-center" id="displayQty">
+            <span id="displayQty" class="font-sans font-semibold text-base md:text-lg text-gray-700 w-4 text-center block">
                 1
-            </x-text>
+            </span>
             <input type="hidden" name="qty" id="inputQty" value="1">
             
             {{-- Tombol Plus --}}
@@ -144,7 +173,7 @@
 
     {{-- Tombol Utama: Menggunakan variant h3 dengan class text-base font-semibold --}}
     <x-button type="submit" variant="primary" class="w-full text-base font-semibold tracking-tight">
-        Tambah Keranjang
+        Add to Cart
     </x-button>
 </x-bottom-bar>
         </form>
@@ -298,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             const errorMsg = document.createElement('span');
                             errorMsg.id = 'variant-error-msg';
                             errorMsg.className = 'text-[#FF4647] text-xs font-medium mt-2 block w-full pl-1';
-                            errorMsg.innerText = '* Silakan pilih salah satu varian terlebih dahulu.';
+                            errorMsg.innerText = '*Please select one of the variants first.';
                             variantSection.appendChild(errorMsg);
                         }
                     }
