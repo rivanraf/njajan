@@ -11,6 +11,7 @@ use App\Models\OrderDetail;
 use App\Models\Reservation;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -40,30 +41,6 @@ class OrderController extends Controller
                 }
             }
             // ============================================================
-
-            // Validasi Status Reservasi Harian (Pre-Check)
-            if ($table) {
-                $now = \Carbon\Carbon::now();
-                
-                $activeReservation = Reservation::where('table_id', $table->id)
-                    ->where('reservation_date', $now->toDateString())
-                    ->where('status', 'pending')
-                    ->get()
-                    ->filter(function ($reservation) use ($now) {
-                        $resTime = \Carbon\Carbon::parse($reservation->reservation_time);
-                        // 1. KUNCI MEJA: 55 Menit sebelum jam booking
-                        $startTime = $resTime->copy()->subMinutes(55);
-                        // 2. EXPIRED: 15 Menit setelah jam booking
-                        $endTime = $resTime->copy()->addMinutes(15);
-                        
-                        return $now->between($startTime, $endTime);
-                    })
-                    ->first();
-
-                if ($activeReservation) {
-                    return redirect('/')->with('error', 'Meja ini sedang di-booking dan tidak bisa digunakan untuk pesanan mandiri saat ini.');
-                }
-            }
             
             // 2. Jika meja ditemukan, simpan id dan number ke dalam Session
             if ($table) {
@@ -86,9 +63,7 @@ class OrderController extends Controller
             ->take(5)
             ->get();
 
-        // ==============================================================================================
-        // UPDATE UTAMA: Tarik data pesanan aktif milik gawai ini untuk komponen Shortcut Card di Home
-        // ==============================================================================================
+        // Tarik data pesanan aktif milik gawai ini untuk komponen Shortcut Card di Home
         $deviceId = $request->cookie('device_id') ?? ($_COOKIE['device_id'] ?? null);
         $activeOrders = collect();
 
@@ -99,9 +74,8 @@ class OrderController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
-        // ==============================================================================================
 
-        // 4. Return ke view order.index bersama dengan variabel $activeOrders yang baru ditambahkan
+        // 4. Return ke view order.index bersama dengan variabel $activeOrders
         return view('order.index', compact('categories', 'suggestions', 'activeOrders'));
     }
 
@@ -146,14 +120,11 @@ class OrderController extends Controller
         if(isset($cart[$cartKey])) {
             $cart[$cartKey]['qty'] += $qty;
             if (!empty($notes)) {
-                // Jika sebelumnya sudah ada catatan, tambahkan koma sebagai pemisah
                 if (!empty($cart[$cartKey]['notes'])) {
-                    // Cek agar tidak duplikat catatan yang sama persis
                     if (!str_contains($cart[$cartKey]['notes'], $notes)) {
                         $cart[$cartKey]['notes'] .= ", " . $notes;
                     }
                 } else {
-                    // Jika sebelumnya kosong, langsung isi dengan notes baru
                     $cart[$cartKey]['notes'] = $notes;
                 }
             }
@@ -183,10 +154,9 @@ class OrderController extends Controller
         $combinedVariants = [];
         $combinedNotes = [];
 
-        // 1. Kumpulkan semua informasi dari semua varian yang ada
         foreach ($cart as $key => $item) {
             if (isset($item['menu_id']) && $item['menu_id'] == $id) {
-                if (!$mainKey) $mainKey = $key; // Tentukan item pertama sebagai penampung utama
+                if (!$mainKey) $mainKey = $key;
                 
                 if (!empty($item['variant'])) $combinedVariants[] = $item['variant'];
                 if (!empty($item['notes'])) $combinedNotes[] = $item['notes'];
@@ -195,21 +165,16 @@ class OrderController extends Controller
 
         if ($mainKey) {
             if ($newQty > 0) {
-                // 2. Update item utama dengan Qty baru dan gabungan info
                 $cart[$mainKey]['qty'] = $newQty;
-                
-                // Tetap simpan varian dan notes yang sudah digabung agar tidak hilang
                 $cart[$mainKey]['variant'] = implode(', ', array_unique($combinedVariants));
                 $cart[$mainKey]['notes'] = implode(', ', array_unique($combinedNotes));
 
-                // 3. Hapus baris lain selain item utama (mencegah double qty)
                 foreach ($cart as $key => $item) {
                     if (isset($item['menu_id']) && $item['menu_id'] == $id && $key !== $mainKey) {
                         unset($cart[$key]);
                     }
                 }
             } else {
-                // Jika Qty 0, hapus semua yang berhubungan dengan menu_id ini
                 foreach ($cart as $key => $item) {
                     if (isset($item['menu_id']) && $item['menu_id'] == $id) {
                         unset($cart[$key]);
@@ -226,7 +191,6 @@ class OrderController extends Controller
         $sessionKey = 'cart_table_' . session('table_id');
         $cart = session()->get($sessionKey, []);
 
-        // Hapus semua item yang memiliki menu_id tersebut (Hot & Ice akan terhapus semua)
         foreach ($cart as $key => $item) {
             if (isset($item['menu_id']) && $item['menu_id'] == $id) {
                 unset($cart[$key]);
@@ -238,32 +202,26 @@ class OrderController extends Controller
     }
 
     public function checkout(Request $request) {
-    if (!session()->has('table_id')) {
-        return redirect('/')->with('error', 'Sesi meja Anda tidak valid atau telah berakhir. Silakan scan ulang QR Code di meja Anda.');
-    }
+        if (!session()->has('table_id')) {
+            return redirect('/')->with('error', 'Sesi meja Anda tidak valid atau telah berakhir. Silakan scan ulang QR Code di meja Anda.');
+        }
 
-    $sessionKey = 'cart_table_' . session('table_id');
-    $cart = session()->get($sessionKey, []);
-    
-    $deviceId = $request->cookie('device_id') ?? ($_COOKIE['device_id'] ?? null);
-    $history = [];
-    if ($deviceId) {
-        $history = Order::where('device_id', $deviceId)->orderBy('created_at', 'desc')->get();
-    }
+        $sessionKey = 'cart_table_' . session('table_id');
+        $cart = session()->get($sessionKey, []);
+        
+        $deviceId = $request->cookie('device_id') ?? ($_COOKIE['device_id'] ?? null);
+        $history = [];
+        if ($deviceId) {
+            $history = Order::where('device_id', $deviceId)->orderBy('created_at', 'desc')->get();
+        }
 
-    // =========================================================================
-    // LOGIKA TAMBAHAN: AMBIL MENU ACAK SEBAGAI SUGGESTED ITEMS DI KERANJANG
-    // =========================================================================
-    // Mengambil maksimal 5 menu yang tersedia dan stoknya tidak kosong secara acak
-    $suggestions = \App\Models\Menu::where('is_available', true)
-        ->where('status_stok', '!=', 'kosong')
-        ->inRandomOrder()
-        ->take(5)
-        ->get();
-    // =========================================================================
+        $suggestions = \App\Models\Menu::where('is_available', true)
+            ->where('status_stok', '!=', 'kosong')
+            ->inRandomOrder()
+            ->take(5)
+            ->get();
 
-    // Menambahkan 'suggestions' ke dalam compact agar bisa dirender oleh checkout.blade.php
-    return view('order.checkout', compact('cart', 'history', 'suggestions'));
+        return view('order.checkout', compact('cart', 'history', 'suggestions'));
     }
 
     public function payment()
@@ -396,7 +354,6 @@ class OrderController extends Controller
             return redirect('/')->with('error', 'Data pesanan tidak valid dari Midtrans.');
         }
 
-        // 1. Cek apakah ini reservasi meja (dimulai dengan BOOKING-)
         if (\Illuminate\Support\Str::startsWith($orderIdParam, 'BOOKING-')) {
             $reservation = \App\Models\Reservation::where('booking_code', $orderIdParam)->first();
             if (!$reservation) {
@@ -409,7 +366,6 @@ class OrderController extends Controller
             }
         }
 
-        // 2. Jika pesanan biasa (format: NJN-{id}-{timestamp})
         $parts = explode('-', $orderIdParam);
         $localId = $parts[1] ?? null;
 
@@ -434,17 +390,14 @@ class OrderController extends Controller
     {
         $order = Order::with('table')->findOrFail($id);
 
-        // EARLY RETURN: Jika sudah expired/cancelled
         if ($order->order_status === 'cancelled' || $order->payment_status === 'expired') {
             return view('order.expired', compact('order')); 
         }
 
-        // Jika sudah paid (kasir konfirmasi), arahkan ke halaman sukses
         if ($order->payment_status === 'paid') {
             return redirect()->route('order.success', $order->id);
         }
 
-        // --- START LOGIKA ORDER EXPIRATION ---
         if ($order->order_status === 'pending') {
             $now = \Carbon\Carbon::now();
             $createdAt = \Carbon\Carbon::parse($order->created_at);
@@ -453,7 +406,6 @@ class OrderController extends Controller
             $expireTime = $createdAt->copy()->addMinutes($expireMinutes);
 
             if ($now->greaterThan($expireTime)) {
-                // FIXED: Menggunakan 'cancelled' (double L) sesuai ENUM database
                 $order->order_status = 'cancelled'; 
                 $order->payment_status = 'expired'; 
                 $order->save();
@@ -467,11 +419,9 @@ class OrderController extends Controller
                     }
                 }
 
-                // REDIRECT EXECUTION: Segera tampilkan view expired agar tidak bablas
                 return view('order.expired', compact('order'));
             }
         }
-        // --- END LOGIKA ORDER EXPIRATION ---
 
         return view('order.pending-cash', compact('order'));
     }
@@ -537,10 +487,10 @@ class OrderController extends Controller
             $order->payment_status = 'paid';
         } elseif ($transactionStatus === 'expire') {
             $order->payment_status = 'expired';
-            $order->order_status = 'cancelled'; // FIXED: 'cancelled'
+            $order->order_status = 'cancelled'; 
         } elseif ($transactionStatus === 'cancel') {
             $order->payment_status = 'expired';
-            $order->order_status = 'cancelled'; // FIXED: 'cancelled'
+            $order->order_status = 'cancelled'; 
         }
 
         $order->save();
@@ -550,18 +500,14 @@ class OrderController extends Controller
     public function track($id) {
         $order = Order::with(['table', 'orderDetails.menu'])->findOrFail($id);
 
-        // 1. CEK EXPIRED/CANCELLED (Early Return)
         if ($order->order_status === 'cancelled' || $order->payment_status === 'expired') {
             return view('order.expired', compact('order')); 
         }
 
-        // 2. UNIVERSAL HUB: Semua pesanan pending (cash maupun qris) diarahkan ke pending-cash
-        // pending-cash.blade.php akan menampilkan UI yang berbeda berdasarkan payment_type
         if ($order->payment_status === 'pending') {
             return redirect()->route('order.pending-cash', $order->id);
         }
 
-        // 3. Jika sudah 'paid', tampilkan halaman track progres dapur
         return view('order.track', compact('order'));
     }
 }

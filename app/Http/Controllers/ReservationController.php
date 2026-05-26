@@ -14,16 +14,28 @@ class ReservationController extends Controller
 {
     public function index() {
         // 1. Ambil parameter tanggal dari URL, jika tidak ada gunakan tanggal hari ini
-        $selectedDate = request()->query('date', \Carbon\Carbon::now()->format('Y-m-d'));
+        $selectedDate = request()->query('date', Carbon::now()->format('Y-m-d'));
         
         // 2. Ambil parameter jam dari URL. 
         $selectedTime = request()->query('time', '10:00'); 
 
-        // 3. Ambil semua ID meja yang sudah di-booking pada jadwal tersebut
-        // UPDATE: Masukkan 'arrived' agar meja yang sedang check-in tetap terkunci di halaman depan
+        // Konversi ke format penunjuk waktu yang bersih untuk komparasi database
+        $startTime = Carbon::parse($selectedTime)->format('H:i:s');
+        $endTime = Carbon::parse($selectedTime)->addHour()->format('H:i:s');
+
+        // 3. AMBIL SEMUA ID MEJA YANG TERKUNCI DALAM RENTANG DURASI 1 JAM
         $bookedTableIds = Reservation::where('reservation_date', $selectedDate)
-            ->where('reservation_time', 'LIKE', $selectedTime . '%')
             ->whereIn('status', ['pending', 'confirmed', 'arrived'])
+            ->where(function($query) use ($startTime, $endTime) {
+                $query->where(function($q) use ($startTime, $endTime) {
+                    $q->where('reservation_time', '>=', $startTime)
+                      ->where('reservation_time', '<', $endTime);
+                })
+                ->orWhere(function($q) use ($startTime) {
+                    $q->where('reservation_time', '<=', $startTime)
+                      ->whereRaw('ADDTIME(reservation_time, "01:00:00") > ?', [$startTime]);
+                });
+            })
             ->pluck('table_id')
             ->toArray();
 
@@ -56,18 +68,29 @@ class ReservationController extends Controller
             ], 400);
         }
 
-        // --- MULAI LOGIKA ANTI-BUG (PENCEGAHAN BENTROK) ---
-        // UPDATE: Masukkan 'arrived' ke pengecekan agar tidak bisa menimpa meja yang sudah check-in
+        // --- ANTI-BUG: VALIDASI BLOKIR DATA BENTROK RENTANG 1 JAM ---
+        $startTime = Carbon::parse($request->reservation_time)->format('H:i:s');
+        $endTime = Carbon::parse($request->reservation_time)->addHour()->format('H:i:s');
+
         $isBooked = Reservation::where('table_id', $request->table_id)
             ->where('reservation_date', $request->reservation_date)
-            ->where('reservation_time', $request->reservation_time)
             ->whereIn('status', ['pending', 'confirmed', 'arrived']) 
+            ->where(function($query) use ($startTime, $endTime) {
+                $query->where(function($q) use ($startTime, $endTime) {
+                    $q->where('reservation_time', '>=', $startTime)
+                      ->where('reservation_time', '<', $endTime);
+                })
+                ->orWhere(function($q) use ($startTime) {
+                    $q->where('reservation_time', '<=', $startTime)
+                      ->whereRaw('ADDTIME(reservation_time, "01:00:00") > ?', [$startTime]);
+                });
+            })
             ->exists();
 
         if ($isBooked) {
             return response()->json([
                 'success' => false,
-                'message' => 'Maaf, Meja ' . $request->table_id . ' sudah dipesan untuk jadwal tersebut. Silakan pilih waktu atau meja lain.'
+                'message' => 'Maaf, meja tersebut sudah dipesan atau masuk dalam rentang blokir 1 jam dari reservasi lain.'
             ], 400);
         }
 
@@ -88,10 +111,10 @@ class ReservationController extends Controller
         ]);
 
         // 4. Konfigurasi Midtrans & Request Snap Token
-        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-        \Midtrans\Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
-        \Midtrans\Config::$isSanitized = env('MIDTRANS_IS_SANITIZED', true);
-        \Midtrans\Config::$is3ds = env('MIDTRANS_IS_3DS', true);
+        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        Config::$isSanitized = env('MIDTRANS_IS_SANITIZED', true);
+        Config::$is3ds = env('MIDTRANS_IS_3DS', true);
 
         $params = [
             'transaction_details' => [
@@ -105,7 +128,7 @@ class ReservationController extends Controller
         ];
 
         try {
-            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            $snapToken = Snap::getSnapToken($params);
             
             $reservation->snap_token = $snapToken;
             $reservation->save();
@@ -130,8 +153,8 @@ class ReservationController extends Controller
         
         if (!in_array($reservation->payment_status, ['paid', 'settlement'])) {
             try {
-                \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-                \Midtrans\Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+                Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+                Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
                 $status = \Midtrans\Transaction::status($reservation->booking_code);
                 
                 if (in_array($status->transaction_status, ['settlement', 'capture'])) {
@@ -153,7 +176,7 @@ class ReservationController extends Controller
     {
         $reservation = Reservation::where('booking_code', $id)->firstOrFail();
 
-        // Amankan Logika Kadaluarsa: Jika melewati 15 menit, lempar langsung ke home dengan alert
+        // Mengunci aturan expired transaksi Midtrans gantung (15 menit)
         if ($reservation->status === 'pending' && Carbon::parse($reservation->created_at)->addMinutes(15)->isPast()) {
             $reservation->update([
                 'status' => 'cancelled',
@@ -172,7 +195,7 @@ class ReservationController extends Controller
 
     public function adminIndex()
     {
-        // Otomatis bersihkan data menggantung di database saat admin memuat dashboard
+        // Otomatis bersihkan data menggantung di database yang belum bayar via Midtrans selama 15 menit
         Reservation::where('status', 'pending')
             ->where('created_at', '<', Carbon::now()->subMinutes(15))
             ->update([
@@ -184,9 +207,6 @@ class ReservationController extends Controller
         return view('admin.reservations.index', compact('reservations'));
     }
 
-    // ==============================================================================================
-    // UPDATE LOGIKA: MENDUKUNG STATUS 'ARRIVED' (CHECK-IN) & OTOMATISASI STATE MEJA KAFE
-    // ==============================================================================================
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
@@ -198,25 +218,13 @@ class ReservationController extends Controller
             'status' => $request->status
         ]);
 
-        // Operasional Otomatis: Jika pelanggan Check-In, ubah status meja terkait di sistem menjadi terpakai
-        if ($request->status === 'arrived') {
-            $reservation->table()->update(['status' => 'terpakai']);
-        } 
-        // Jika kasir membatalkan atau mengembalikan ke pending/confirmed, bebaskan kembali status mejanya
-        elseif (in_array($request->status, ['cancelled', 'confirmed', 'pending'])) {
-            $reservation->table()->update(['status' => 'available']);
-        }
-
+        // FIX: Logika penguncian fisik tabel dicabut total agar tidak menginterupsi alur scan QR umum.
         return redirect()->back()->with('success', 'Status reservasi meja ' . $reservation->booking_code . ' berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
         $reservation = Reservation::findOrFail($id);
-        
-        // Sebelum dihapus, pastikan meja yang terikat dikembalikan ke status available
-        $reservation->table()->update(['status' => 'available']);
-        
         $reservation->delete();
         return redirect()->back()->with('success', 'Data reservasi telah dihapus permanen.');
     }

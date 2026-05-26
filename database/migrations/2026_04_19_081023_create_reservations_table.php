@@ -20,7 +20,7 @@ return new class extends Migration
         $table->date('reservation_date'); // Tanggal booking
         $table->time('reservation_time'); // Jam booking
         $table->integer('guests'); // Jumlah orang
-        $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending');
+        $table->enum('status', ['pending', 'confirmed', 'arrived', 'cancelled'])->default('pending');
         $table->timestamps();
         });
     }

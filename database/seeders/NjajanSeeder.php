@@ -16,6 +16,7 @@ class NjajanSeeder extends Seeder
         $coffee = Category::create(['name' => 'Coffee']);
         $nonCoffee = Category::create(['name' => 'Non-Coffee']);
         $snack = Category::create(['name' => 'Snack']);
+        $food = Category::create(['name' => 'Food']);
 
         // 2. Buat Menu Coffee Shop
         Menu::create([
@@ -36,6 +37,13 @@ class NjajanSeeder extends Seeder
             'category_id' => $snack->id,
             'name' => 'Croissant Almond',
             'price' => 25000,
+            'is_available' => true
+        ]);
+
+        Menu::create([
+            'category_id' => $food->id,  // <-- Mengunci relasi foreign key ke kategori Food
+            'name' => 'Nasi Magelangan', // <-- Nama produk makanan Anda
+            'price' => 18000,
             'is_available' => true
         ]);
 
