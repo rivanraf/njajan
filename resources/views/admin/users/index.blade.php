@@ -11,7 +11,7 @@
                 
                 <div class="md:col-span-1">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Daftarkan Akun Baru</h3>
+                        <h3 class="text-sm font-semibold text-gray-900 uppercase mb-4">Daftarkan Akun Baru</h3>
                         
                         @if(session('success'))
                             <div class="mb-4 text-sm text-green-600 font-bold italic">
@@ -23,15 +23,15 @@
                             @csrf
                             <div class="space-y-4">
                                 <div>
-                                    <x-input-label for="name" :value="__('Nama Lengkap')" class="text-[10px] font-bold uppercase" />
+                                    <x-input-label for="name" :value="__('Nama Lengkap')" class="text-[10px] font-medium capitalize" />
                                     <x-text-input id="name" name="name" type="text" class="block mt-1 w-full text-sm" required />
                                 </div>
                                 <div>
-                                    <x-input-label for="email" :value="__('Email Login')" class="text-[10px] font-bold uppercase" />
+                                    <x-input-label for="email" :value="__('Email Login')" class="text-[10px] font-medium capitalize" />
                                     <x-text-input id="email" name="email" type="email" class="block mt-1 w-full text-sm" required />
                                 </div>
                                 <div>
-                                    <x-input-label for="role" :value="__('Role')" class="text-[10px] font-bold uppercase" />
+                                    <x-input-label for="role" :value="__('Role')" class="text-[10px] font-medium capitalize" />
                                     <select name="role" id="role" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full text-sm">
                                         <option value="kasir">Kasir</option>
                                         <option value="admin">Admin (Owner)</option>
@@ -39,7 +39,7 @@
                                 </div>
 
                                 <div class="relative">
-                                    <x-input-label for="password" :value="__('Password')" class="text-[10px] font-bold uppercase" />
+                                    <x-input-label for="password" :value="__('Password')" class="text-[10px] font-medium capitalize" />
                                     <div class="relative mt-1">
                                         <x-text-input id="password" name="password" type="password" class="block w-full text-sm pr-10" required />
                                         
@@ -65,7 +65,7 @@
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <table class="w-full text-left">
                             <thead class="bg-gray-50 border-b border-gray-100">
-                                <tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <tr class="text-[10px] font-semibold text-gray-600 uppercase">
                                     <th class="px-6 py-4">Nama & Email</th>
                                     <th class="px-6 py-4">Role</th>
                                     <th class="px-6 py-4 text-center">Aksi</th>
@@ -75,11 +75,11 @@
                                 @foreach($users as $user)
                                 <tr>
                                     <td class="px-6 py-4">
-                                        <div class="font-bold text-gray-800">{{ $user->name }}</div>
-                                        <div class="text-xs text-gray-400">{{ $user->email }}</div>
+                                        <div class="font-semibold text-gray-900">{{ $user->name }}</div>
+                                        <div class="text-xs text-gray-600">{{ $user->email }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="px-2 py-1 rounded text-[10px] font-black uppercase {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700' }}">
+                                        <span class="px-2 py-1 rounded text-[10px] font-semibold uppercase {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700' }}">
                                             {{ $user->role }}
                                         </span>
                                     </td>
@@ -87,7 +87,7 @@
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Hapus akses karyawan ini?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-500 hover:text-red-700 font-bold uppercase text-[10px]">Cabut Akses</button>
+                                            <button type="submit" class="text-red-500 hover:text-red-700 font-semibold capitalize text-xs">Cabut Akses</button>
                                         </form>
                                     </td>
                                 </tr>

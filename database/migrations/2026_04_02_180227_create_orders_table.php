@@ -19,7 +19,6 @@ return new class extends Migration
             $table->enum('payment_type', ['cash', 'qris'])->default('qris');
             $table->enum('payment_status', ['pending', 'paid', 'expired'])->default('pending');
             $table->enum('order_status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
-            $table->string('snap_token')->nullable(); // Untuk Midtrans
             $table->timestamps();
         });
     }

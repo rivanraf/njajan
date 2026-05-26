@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-lg text-gray-800 leading-tight">
+            <h2 class="font-semibold text-lg text-gray-900 leading-tight">
                 {{ __('Manajemen Menu') }}
             </h2>
-            <a href="{{ route('admin.menu.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow-sm transition">
+            <a href="{{ route('admin.menu.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-sm transition">
                 + Tambah Menu Baru
             </a>
         </div>
@@ -23,7 +23,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                            <tr class="bg-gray-50 text-[10px] font-semibold text-gray-600 uppercase border-b border-gray-100">
                                 <th class="px-6 py-4">Produk</th>
                                 <th class="px-6 py-4">Kategori</th>
                                 <th class="px-6 py-4">Harga</th>
@@ -43,26 +43,26 @@
                                                      alt="">
                                             </div>
                                             <div class="ms-4">
-                                                <div class="text-sm font-bold text-gray-900">{{ $menu->name }}</div>
-                                                <div class="text-[10px] text-gray-400 uppercase font-medium">ID: #MN-{{ $menu->id }}</div>
+                                                <div class="text-sm font-semibold text-gray-900">{{ $menu->name }}</div>
+                                                <div class="text-[10px] text-gray-600 uppercase font-medium">ID: #MN-{{ $menu->id }}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="px-2 py-1 text-[10px] font-bold rounded bg-gray-100 text-gray-600 uppercase">
+                                        <span class="px-2 py-1 text-[10px] font-medium rounded bg-gray-100 text-gray-600">
                                             {{ $menu->category->name ?? 'Uncategorized' }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-black text-gray-700">
+                                    <td class="px-6 py-4 text-sm font-semibold text-gray-900">
                                         Rp {{ number_format($menu->price, 0, ',', '.') }}
                                     </td>
                                     <td class="px-6 py-4">
                                         @if(trim(strtolower($menu->status_stok)) == 'kosong')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-800">
                                                 KOSONG/HABIS
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-green-100 text-green-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-800">
                                                 TERSEDIA
                                             </span>
                                         @endif
@@ -71,14 +71,14 @@
                                     {{-- Kolom Ketersediaan (Soft Delete Status) --}}
                                     <td class="px-6 py-4">
                                         @if($menu->trashed())
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gray-200 text-gray-500">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-200 text-gray-500">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span>
-                                                NONAKTIF
+                                                Nonaktif
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                                                AKTIF
+                                                Aktif
                                             </span>
                                         @endif
                                     </td>
@@ -88,15 +88,15 @@
                                                 {{-- Tombol Pulihkan (hanya muncul jika menu di-soft-delete) --}}
                                                 <form action="{{ route('admin.menu.restore', $menu->id) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="text-emerald-600 hover:text-emerald-800 text-xs font-bold uppercase tracking-tighter">Pulihkan</button>
+                                                    <button type="submit" class="text-emerald-600 hover:text-emerald-800 text-xs font-semibold">Pulihkan</button>
                                                 </form>
                                             @else
-                                                <a href="{{ route('admin.menu.edit', $menu->id) }}" class="text-indigo-600 hover:text-indigo-900 text-xs font-bold uppercase tracking-tighter">Edit</a>
-                                                <span class="text-gray-300">|</span>
+                                                <a href="{{ route('admin.menu.edit', $menu->id) }}" class="text-indigo-600 hover:text-indigo-900 text-xs font-semibold">Edit</a>
+                                                <span class="text-gray-200">|</span>
                                                 <form action="{{ route('admin.menu.destroy', $menu->id) }}" method="POST" onsubmit="return confirm('Nonaktifkan menu ini? (Data tidak dihapus permanen)')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-bold uppercase tracking-tighter">Nonaktifkan</button>
+                                                    <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-semibold">Nonaktifkan</button>
                                                 </form>
                                             @endif
                                         </div>

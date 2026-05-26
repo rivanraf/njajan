@@ -66,19 +66,25 @@
     </div>
 
     {{-- ============================================================================================== --}}
-    {{-- FIX BUG: IMPLEMENTASI ACTIVE ORDER SHORTCUTS (SUDAH SEJAJAR & RAPI SESUAI GRIDS HOME) --}}
+    {{-- IMPLEMENTASI ACTIVE ORDER SHORTCUTS (KONDISI JIKA TIDAK ADA ORDERAN MAKA SEMBUNYI TOTAL) --}}
     {{-- ============================================================================================== --}}
-    @if(isset($activeOrders) && $activeOrders->count() > 0)
+    @php
+        // Filter awal di level Blade untuk memastikan hanya menghitung order yang benar-benar aktif berjalan
+        $filteredActiveOrders = isset($activeOrders) ? $activeOrders->filter(function($order) {
+            return $order->order_status !== 'expired' && 
+                   $order->order_status !== 'cancelled' && 
+                   $order->payment_status !== 'expired';
+        }) : collect();
+    @endphp
+
+    @if($filteredActiveOrders->count() > 0)
         <div class="mb-2 w-full">
             {{-- Judul Seksi: px-5 agar sejajar dengan "Who's Njajanin?" --}}
             <h2 class="font-sans font-semibold text-lg md:text-xl text-gray-800 tracking-tight mb-3 px-5">Active Orders</h2>
             
-            {{-- Container Scroll Horizontal: Menggunakan pl-5 dan pr-5 agar saat di-scroll mentok tepi b bodi kartu pas 16px --}}
+            {{-- Container Scroll Horizontal --}}
             <div class="flex gap-4 overflow-x-auto pb-4 pl-5 pr-5 no-scrollbar snap-x snap-mandatory">
-                @foreach($activeOrders as $actOrder)
-                    @if($actOrder->order_status === 'expired' || $actOrder->order_status === 'cancelled' || $actOrder->payment_status === 'expired')
-                        @php continue; @endphp
-                    @endif
+                @foreach($filteredActiveOrders as $actOrder)
                     @php
                         // Pemetaan Badge Status Finansial/Proses
                         $isPendingPay = $actOrder->payment_status === 'pending';
@@ -164,7 +170,7 @@
             </div>
         </div>
     @endif
-{{-- ============================================================================================== --}}
+    {{-- ============================================================================================== --}}
 
     {{-- SEARCH BAR --}}
     <div class="px-5">

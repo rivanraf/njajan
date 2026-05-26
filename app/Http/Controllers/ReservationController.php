@@ -13,27 +13,25 @@ use Carbon\Carbon;
 class ReservationController extends Controller
 {
     public function index() {
-    // 1. Ambil parameter tanggal dari URL, jika tidak ada gunakan tanggal hari ini
-    $selectedDate = request()->query('date', \Carbon\Carbon::now()->format('Y-m-d'));
-    
-    // 2. Ambil parameter jam dari URL. 
-    // WAJIB Berikan nilai default (misal '10:00') agar saat halaman pertama dimuat, 
-    // sistem langsung mengecek ketersediaan meja pada jam operasional pertama tersebut.
-    $selectedTime = request()->query('time', '10:00'); 
+        // 1. Ambil parameter tanggal dari URL, jika tidak ada gunakan tanggal hari ini
+        $selectedDate = request()->query('date', \Carbon\Carbon::now()->format('Y-m-d'));
+        
+        // 2. Ambil parameter jam dari URL. 
+        $selectedTime = request()->query('time', '10:00'); 
 
-    // 3. Ambil semua ID meja yang sudah di-booking pada jadwal tersebut
-    $bookedTableIds = Reservation::where('reservation_date', $selectedDate)
-        // Menggunakan LIKE untuk mengantisipasi perbedaan format detik (:00) di database
-        ->where('reservation_time', 'LIKE', $selectedTime . '%')
-        ->whereIn('status', ['pending', 'confirmed'])
-        ->pluck('table_id')
-        ->toArray();
+        // 3. Ambil semua ID meja yang sudah di-booking pada jadwal tersebut
+        // UPDATE: Masukkan 'arrived' agar meja yang sedang check-in tetap terkunci di halaman depan
+        $bookedTableIds = Reservation::where('reservation_date', $selectedDate)
+            ->where('reservation_time', 'LIKE', $selectedTime . '%')
+            ->whereIn('status', ['pending', 'confirmed', 'arrived'])
+            ->pluck('table_id')
+            ->toArray();
 
-    // 4. Ambil semua data meja
-    $tables = Table::all();
+        // 4. Ambil semua data meja
+        $tables = Table::all();
 
-    // 5. Kirim data ke view welcome
-    return view('welcome', compact('tables', 'bookedTableIds'));
+        // 5. Kirim data ke view welcome
+        return view('welcome', compact('tables', 'bookedTableIds'));
     }
 
     public function store(Request $request)
@@ -59,10 +57,11 @@ class ReservationController extends Controller
         }
 
         // --- MULAI LOGIKA ANTI-BUG (PENCEGAHAN BENTROK) ---
+        // UPDATE: Masukkan 'arrived' ke pengecekan agar tidak bisa menimpa meja yang sudah check-in
         $isBooked = Reservation::where('table_id', $request->table_id)
             ->where('reservation_date', $request->reservation_date)
             ->where('reservation_time', $request->reservation_time)
-            ->whereIn('status', ['pending', 'confirmed']) 
+            ->whereIn('status', ['pending', 'confirmed', 'arrived']) 
             ->exists();
 
         if ($isBooked) {
@@ -155,7 +154,7 @@ class ReservationController extends Controller
         $reservation = Reservation::where('booking_code', $id)->firstOrFail();
 
         // Amankan Logika Kadaluarsa: Jika melewati 15 menit, lempar langsung ke home dengan alert
-        if ($reservation->status === 'pending' && Carbon::parse($reservation->created_at)->addMinutes(1)->isPast()) {
+        if ($reservation->status === 'pending' && Carbon::parse($reservation->created_at)->addMinutes(15)->isPast()) {
             $reservation->update([
                 'status' => 'cancelled',
                 'payment_status' => 'expire'
@@ -175,7 +174,7 @@ class ReservationController extends Controller
     {
         // Otomatis bersihkan data menggantung di database saat admin memuat dashboard
         Reservation::where('status', 'pending')
-            ->where('created_at', '<', Carbon::now()->subMinutes(1))
+            ->where('created_at', '<', Carbon::now()->subMinutes(15))
             ->update([
                 'status' => 'cancelled',
                 'payment_status' => 'expire'
@@ -185,43 +184,39 @@ class ReservationController extends Controller
         return view('admin.reservations.index', compact('reservations'));
     }
 
+    // ==============================================================================================
+    // UPDATE LOGIKA: MENDUKUNG STATUS 'ARRIVED' (CHECK-IN) & OTOMATISASI STATE MEJA KAFE
+    // ==============================================================================================
     public function updateStatus(Request $request, $id)
     {
+        $request->validate([
+            'status' => 'required|in:pending,confirmed,arrived,cancelled'
+        ]);
+
         $reservation = Reservation::findOrFail($id);
         $reservation->update([
             'status' => $request->status
         ]);
+
+        // Operasional Otomatis: Jika pelanggan Check-In, ubah status meja terkait di sistem menjadi terpakai
+        if ($request->status === 'arrived') {
+            $reservation->table()->update(['status' => 'terpakai']);
+        } 
+        // Jika kasir membatalkan atau mengembalikan ke pending/confirmed, bebaskan kembali status mejanya
+        elseif (in_array($request->status, ['cancelled', 'confirmed', 'pending'])) {
+            $reservation->table()->update(['status' => 'available']);
+        }
+
         return redirect()->back()->with('success', 'Status reservasi meja ' . $reservation->booking_code . ' berhasil diperbarui.');
-    }
-
-    public function edit($id)
-    {
-        $reservation = Reservation::findOrFail($id);
-        $tables = \App\Models\Table::all(); 
-        return view('admin.reservations.edit', compact('reservation', 'tables'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'whatsapp' => 'required',
-            'table_id' => 'required|exists:tables,id',
-            'reservation_date' => 'required|date',
-            'reservation_time' => 'required',
-            'status' => 'required|in:pending,confirmed,cancelled',
-        ]);
-
-        $reservation = Reservation::findOrFail($id);
-        $reservation->update($request->all());
-
-        return redirect()->route('admin.reservations.index')
-            ->with('success', 'Data reservasi ' . $reservation->booking_code . ' berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
         $reservation = Reservation::findOrFail($id);
+        
+        // Sebelum dihapus, pastikan meja yang terikat dikembalikan ke status available
+        $reservation->table()->update(['status' => 'available']);
+        
         $reservation->delete();
         return redirect()->back()->with('success', 'Data reservasi telah dihapus permanen.');
     }

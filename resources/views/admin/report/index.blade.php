@@ -26,7 +26,7 @@
             <div class="mb-6 flex justify-end no-print px-4 sm:px-0">
                 <form action="" method="GET" class="flex gap-2 w-full sm:w-auto">
                     <input type="date" name="date" value="{{ $date }}" class="w-full sm:w-auto border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-900 capitalize shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
                         Filter
                     </button>
                 </form>
@@ -43,7 +43,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                                <tr class="bg-gray-50 text-[10px] font-semibold text-gray-600 uppercase border-b border-gray-100">
                                     <th class="px-6 py-4">Waktu</th>
                                     <th class="px-6 py-4">Pelanggan</th>
                                     <th class="px-6 py-4 text-center">Meja</th>
@@ -53,14 +53,14 @@
                             <tbody class="divide-y divide-gray-50">
                                 @forelse($orders as $order)
                                 <tr class="hover:bg-gray-50/50 transition">
-                                    <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $order->created_at->format('H:i') }}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">{{ $order->customer_name }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium whitespace-nowrap">{{ $order->created_at->format('H:i') }}</td>
+                                    <td class="px-6 py-4 text-sm font-semibold text-gray-900 whitespace-nowrap">{{ $order->customer_name }}</td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        <span class="bg-gray-100 px-3 py-1 rounded-lg text-xs font-bold text-gray-600">
+                                        <span class="bg-gray-100 px-3 py-1 rounded-lg text-xs font-semibold text-gray-600">
                                             {{ $order->table->number }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right text-sm font-black text-gray-700 whitespace-nowrap">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
+                                    <td class="px-6 py-4 text-right text-sm font-medium text-gray-600 whitespace-nowrap">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -72,8 +72,8 @@
                             </tbody>
                             <tfoot>
                                 <tr class="bg-gray-50 border-t border-gray-100">
-                                    <td colspan="3" class="px-6 py-4 text-right font-bold text-sm text-gray-900 uppercase tracking-widest">Total Pendapatan</td>
-                                    <td class="px-6 py-4 text-right font-black text-lg text-indigo-600 whitespace-nowrap">
+                                    <td colspan="3" class="px-6 py-4 text-right font-semibold text-sm text-gray-900 capitalize">Total Pendapatan</td>
+                                    <td class="px-6 py-4 text-right font-semibold text-base text-indigo-600 whitespace-nowrap">
                                         Rp {{ number_format($totalRevenue, 0, ',', '.') }}
                                     </td>
                                 </tr>

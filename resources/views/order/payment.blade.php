@@ -185,7 +185,7 @@
 
                     {{-- Label & Deskripsi: Teks tidak berubah warna --}}
                     <div class="flex flex-col">
-                        <span class="font-sans font-medium text-sm md:text-base text-gray-900 block">QRIS</span>
+                        <span class="font-sans font-medium text-sm md:text-base text-gray-900 block">QRIS/Midtrans</span>
                         <span class="font-sans font-medium text-xs capitalize text-gray-600 block">Scan using e-wallet or m-banking</span>
                     </div>
                 </div>

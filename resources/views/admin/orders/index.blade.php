@@ -20,8 +20,23 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 @forelse($orders as $order)
                     <div class="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200 flex flex-col">
-                        <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center {{ strtolower($order->order_status) == 'pending' ? 'bg-yellow-50/50' : 'bg-blue-50/50' }}">
-                            <span class="text-sm font-bold text-gray-700">#{{ $order->id }}</span>
+                        
+                        {{-- CARD HEADER: Menampilkan ID, Status, Tanggal, & Waktu Masuk Pesanan --}}
+                        <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-start {{ strtolower($order->order_status) == 'pending' ? 'bg-yellow-50/50' : 'bg-blue-50/50' }}">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-700">#{{ $order->id }}</span>
+                                
+                                {{-- INFORMASI TIMESTAMPS: Realtime dari Data Pesanan (Tanpa Animasi) --}}
+                                <div class="flex flex-col mt-1 text-[10px] leading-tight font-sans text-gray-500">
+                                    <span class="font-medium">
+                                        {{ $order->created_at->translatedFormat('d F Y') }}
+                                    </span>
+                                    <span class="font-bold text-gray-700 mt-0.5">
+                                        {{ $order->created_at->format('H:i') }} WIB
+                                    </span>
+                                </div>
+                            </div>
+                            
                             <span class="text-[10px] font-extrabold px-2 py-0.5 rounded uppercase {{ strtolower($order->order_status) == 'pending' ? 'bg-yellow-200 text-yellow-800' : 'bg-blue-200 text-blue-800' }}">
                                 {{ $order->order_status }}
                             </span>
@@ -33,17 +48,17 @@
                                     <p class="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Pelanggan</p>
                                     <p class="text-sm font-semibold text-gray-800 truncate w-32">{{ $order->customer_name }}</p>
                                     {{-- BADGE METODE PEMBAYARAN: MINIMALIS MODERN --}}
-                                <div class="mt-1.5 flex items-center gap-1">
-                                    @if(strtolower($order->payment_type) == 'cash')
-                                        <div class="flex items-center bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shadow-sm">
-                                            Cashier
-                                        </div>
-                                    @else
-                                        <div class="flex items-center bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shadow-sm">
-                                            QRIS / Digital
-                                        </div>
-                                    @endif
-                                </div>
+                                    <div class="mt-1.5 flex items-center gap-1">
+                                        @if(strtolower($order->payment_type) == 'cash')
+                                            <div class="flex items-center bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shadow-sm">
+                                                Cashier
+                                            </div>
+                                        @else
+                                            <div class="flex items-center bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter shadow-sm">
+                                                QRIS / Digital
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="bg-indigo-600 text-white px-3 py-1 rounded text-center">
                                     <p class="text-[8px] uppercase font-bold leading-none mb-0.5">Meja</p>
@@ -69,7 +84,7 @@
                                                 {{-- 2. TAMPILKAN NOTES (Catatan) --}}
                                                 @if($item->notes)
                                                     <div class="mt-1.5 flex items-start gap-1 bg-gray-50 p-1.5 rounded border-l-2 border-gray-300">
-                                                        <p class="text-[10px] text-gray-600 italic leading-tight italic">
+                                                        <p class="text-[10px] text-gray-600 italic leading-tight">
                                                             <span class="font-bold uppercase text-[8px] block not-italic text-gray-400 mb-0.5">Catatan:</span>
                                                             "{{ $item->notes }}"
                                                         </p>

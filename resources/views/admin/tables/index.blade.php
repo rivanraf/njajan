@@ -11,11 +11,11 @@
                 
                 <div class="md:col-span-1">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Tambah Meja Baru</h3>
+                        <h3 class="text-sm font-semibold text-gray-900 uppercase mb-4">Tambah Meja Baru</h3>
                         <form action="{{ route('admin.tables.store') }}" method="POST">
                             @csrf
                             <div class="mb-4">
-                                <x-input-label for="number" :value="__('Nomor Meja')" class="text-xs font-bold uppercase" />
+                                <x-input-label for="number" :value="__('Nomor Meja')" class="text-xs font-medium capitalize" />
                                 <x-text-input id="number" class="block mt-1 w-full" type="text" name="number" required placeholder="Contoh: 01" />
                                 <x-input-error :messages="$errors->get('number')" class="mt-2" />
                             </div>
@@ -30,7 +30,7 @@
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <table class="w-full text-left">
                             <thead class="bg-gray-50 border-b border-gray-100">
-                                <tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <tr class="text-[10px] font-semibold text-gray-600 uppercase">
                                     <th class="px-6 py-4">No. Meja</th>
                                     <th class="px-6 py-4">Hash / QR Link</th>
                                     <th class="px-6 py-4 text-center">Aksi</th>
@@ -40,27 +40,27 @@
                                 @forelse($tables as $table)
                                     <tr>
                                         <td class="px-6 py-4">
-                                            <span class="text-lg font-black text-indigo-600 tracking-tighter">Meja {{ $table->number }}</span>
+                                            <span class="text-base font-semiold text-gray-900">Meja {{ $table->number }}</span>
                                         </td>
                                         <td class="px-6 py-4">
                                             <code class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-600">/scan/{{ $table->hash }}</code>
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <div class="flex items-center justify-center space-x-3">
-                                                <a href="{{ route('admin.tables.print', $table->id) }}" target="_blank" class="text-blue-500 hover:text-blue-700 text-xs font-bold uppercase transition">Cetak QR</a>
-                                                <span class="text-gray-300">|</span>
+                                                <a href="{{ route('admin.tables.print', $table->id) }}" target="_blank" class="text-blue-500 hover:text-blue-700 text-xs font-semibold capitalize transition">Cetak QR</a>
+                                                <span class="text-gray-200">|</span>
                                                 <form action="{{ route('admin.tables.toggleStatus', $table->id) }}" method="POST" onsubmit="return confirm('Ubah status meja ini?')">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <button type="submit" class="text-xs font-bold uppercase tracking-widest {{ $table->status === 'available' ? 'text-gray-500 hover:text-gray-700' : 'text-green-600 hover:text-green-800' }}">
+                                                    <button type="submit" class="text-xs font-semibold {{ $table->status === 'available' ? 'text-gray-500 hover:text-gray-700' : 'text-green-600 hover:text-green-800' }}">
                                                         {{ $table->status === 'available' ? 'Nonaktifkan' : 'Aktifkan' }}
                                                     </button>
                                                 </form>
-                                                <span class="text-gray-300">|</span>
+                                                <span class="text-gray-200">|</span>
                                                 <form id="delete-form-{{ $table->id }}" action="{{ route('admin.tables.destroy', $table->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="button" onclick="confirmDelete('{{ $table->id }}')" class="text-red-500 hover:text-red-700 text-xs font-bold uppercase">Hapus</button>
+                                                    <button type="button" onclick="confirmDelete('{{ $table->id }}')" class="text-red-500 hover:text-red-700 text-xs font-semibold">Hapus</button>
                                                 </form>
                                             </div>
                                         </td>
