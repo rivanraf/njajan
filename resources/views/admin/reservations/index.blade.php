@@ -19,9 +19,9 @@
                                 <th class="px-6 py-4 text-center">No. Meja</th>
                                 <th class="px-6 py-4">Jadwal Kedatangan</th>
                                 <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4 text-center">Aksi Kasir</th>
+                                <th class="px-6 py-4 text-center">Aksi</th>
                                 @if(Auth::user()->role == 'admin')
-                                    <th class="px-6 py-4 text-center">Kontrol Owner</th>
+                                    <th class="px-6 py-4 text-center">Kontrol</th>
                                 @endif
                             </tr>
                         </thead>

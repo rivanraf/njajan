@@ -240,92 +240,49 @@
     <script src="{{ env('MIDTRANS_IS_PRODUCTION', false) ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // =========================================================================
-        // KODE ASLI ANDA (100% DI-PERTAHANKAN, TIDAK DIUBAH/DIRUSAK)
-        // =========================================================================
-        const savedName = localStorage.getItem('customer_name');
-        if (savedName && savedName !== '-') {
-            const displayEl = document.getElementById('display_customer_name');
-            const inputEl = document.getElementById('input_customer_name');
-            
-            if (displayEl) {
-                displayEl.textContent = savedName;
-            }
-            if (inputEl) {
-                inputEl.value = savedName;
-            }
-        }
-        // =========================================================================
+        document.addEventListener('DOMContentLoaded', function() {
 
-        // LOGIKA INTERSEPTOR (PENAMBAL BUG REFRESH HOSTING)
-        const payButton = document.getElementById('pay-button-interceptor');
-        const paymentForm = document.getElementById('paymentForm');
-
-        if (payButton && paymentForm) {
-            payButton.addEventListener('click', async function(e) {
-                e.preventDefault(); // Mengunci browser agar tidak refresh halaman sepihak
-
-                // Ambil metode pembayaran yang sedang dicentang oleh pelanggan
-                const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
-
-                // SKENARIO 1: JIKA USER MEMILIH CASHIER (BAYAR DI KASIR)
-                // Langsung submit form konvensional tanpa interupsi, aman karena menggunakan URL Relatif
-                if (selectedMethod === 'Cashier') {
-                    payButton.disabled = true;
-                    payButton.textContent = 'Processing...';
-                    paymentForm.submit(); 
-                    return;
+            const savedName = localStorage.getItem('customer_name');
+            if (savedName && savedName !== '-') {
+                const displayEl = document.getElementById('display_customer_name');
+                const inputEl = document.getElementById('input_customer_name');
+                
+                if (displayEl) {
+                    displayEl.textContent = savedName;
                 }
+                if (inputEl) {
+                    inputEl.value = savedName;
+                }
+            }
 
-                // SKENARIO 2: JIKA USER MEMILIH QRIS (MIDTRANS)
-                payButton.disabled = true;
-                payButton.textContent = 'MEMPROSES...';
+            const payButton = document.getElementById('pay-button-interceptor');
+            const paymentForm = document.getElementById('paymentForm');
 
-                try {
-                    const formData = new FormData(paymentForm);
-                    
-                    // Lakukan request background data (AJAX Fetch) ke controller processCheckout
-                    const response = await fetch(paymentForm.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 
-                            'Accept': 'application/json', 
-                            'X-Requested-With': 'XMLHttpRequest' 
-                        }
-                    });
+            if (payButton && paymentForm) {
+                payButton.addEventListener('click', function(e) {
+                    e.preventDefault(); // Kunci browser agar tidak refresh halaman sepihak
 
-                    const textData = await response.text();
-                    
-                    try {
-                        // Coba parsing ke JSON jika backend merespons JSON token
-                        const result = JSON.parse(textData);
-                        
-                        if (result.success && result.snap_token) {
-                            window.snap.pay(result.snap_token, {
-                                onSuccess: function() { window.location.href = "{{ url('/order/payment-success') }}/" + result.order_id; },
-                                onPending: function() { window.location.href = "{{ url('/order/track') }}/" + result.order_id; },
-                                onError: function() { alert("Pembayaran gagal!"); payButton.disabled = false; payButton.textContent = 'Pay now'; },
-                                onClose: function () { alert("Anda menutup jendela transaksi."); payButton.disabled = false; payButton.textContent = 'Pay now'; }
-                            });
-                        } else {
-                            alert(result.message || 'Gagal memproses transaksi.');
-                            payButton.disabled = false;
-                            payButton.textContent = 'Pay now';
-                        }
-                    } catch (jsonError) {
-                        // ANTISIPASI LOGIKA CONTROLLER LAMA: 
-                        // Jika controller Anda mengembalikan return view() berupa HTML (bukan JSON), 
-                        // JavaScript akan langsung melempar fallback submit form biasa agar kompatibel 100%
-                        paymentForm.submit();
+                    // Kunci tombol secara agresif agar tidak bisa di-klik dua kali (Anti Duplikasi Data)
+                    if (payButton.disabled) return;
+                    payButton.disabled = true;
+                    payButton.textContent = 'MEMPROSES...';
+
+                    // Ambil metode pembayaran yang sedang dicentang oleh pelanggan
+                    const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+                    if (selectedMethod === 'Cashier') {
+                        payButton.textContent = 'Processing...';
+                        paymentForm.submit(); 
+                        return;
                     }
 
-                } catch (error) {
-                    // Fallback darurat jika ada gangguan jaringan di hosting
+                    // SKENARIO QRIS (MIDTRANS)
+                    // Karena Controller Anda mengembalikan HTML (return view), form harus dikirim 
+                    // langsung secara konvensional (Native Submit) setelah tombol dikunci.
+                    // Ini menjamin hanya 1 data order yang terbentuk di database lokal maupun hosting.
                     paymentForm.submit();
-                }
-            });
-        }
-    });
+                });
+            }
+        });
     </script>
 </x-layout>

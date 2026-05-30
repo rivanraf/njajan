@@ -317,8 +317,8 @@ class OrderController extends Controller
                 $order->snap_token = $snapToken;
                 $order->save();
 
-                $sessionKey = 'cart_table_' . session('table_id');
-                session()->forget($sessionKey);
+                // $sessionKey = 'cart_table_' . session('table_id');
+                // session()->forget($sessionKey);
                 return view('order.payment_snap', compact('snapToken', 'order'));
                 
             } catch (\Exception $e) {
@@ -340,6 +340,12 @@ class OrderController extends Controller
         if (!$order) {
             return redirect('/')->with('error', 'Pesanan tidak ditemukan.');
         }
+
+        if ($order->payment_status === 'pending') {
+        $order->payment_status = 'paid';
+        $order->save();
+        }
+
         $sessionKey = 'cart_table_' . session('table_id');
         session()->forget($sessionKey);
         return view('order.success', compact('order'));
@@ -402,7 +408,7 @@ class OrderController extends Controller
             $now = \Carbon\Carbon::now();
             $createdAt = \Carbon\Carbon::parse($order->created_at);
             
-            $expireMinutes = ($order->payment_type === 'cash') ? 3 : 15;
+            $expireMinutes = ($order->payment_type === 'cash') ? 5 : 15;
             $expireTime = $createdAt->copy()->addMinutes($expireMinutes);
 
             if ($now->greaterThan($expireTime)) {

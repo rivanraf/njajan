@@ -76,7 +76,7 @@
             {{-- LOGIKA BACKEND EXPIRED IN (DIPERTAHANKAN) --}}
             @if($order->payment_status === 'pending' && $order->order_status === 'pending')
                 @php
-                    $expireMinutes = ($order->payment_type === 'cash') ? 3 : 15;
+                    $expireMinutes = ($order->payment_type === 'cash') ? 5 : 15;
                     $expireTimeIso = \Carbon\Carbon::parse($order->created_at)->addMinutes($expireMinutes)->toIso8601String();
                 @endphp
                 <div class="flex justify-between items-center">

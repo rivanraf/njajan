@@ -53,11 +53,10 @@ class OrderController extends Controller
 
         $order->save();
 
-        // 3. LOGIKA STRATEGIS: Jika pesanan Selesai (Sudah Bayar & Pulang)
+        // 3. LOGIKA STRATEGIS: Jika pesanan Selesai (Sudah Bayar)
         if ($newStatus === 'completed') {
             $table = \App\Models\Table::find($order->table_id);
             if ($table) {
-                // Meja kembali kosong dan siap di-scan pelanggan baru
                 $table->update(['status' => 'available']);
             }
         }
@@ -70,12 +69,10 @@ class OrderController extends Controller
     // Ambil filter tanggal (default hari ini)
     $date = $request->get('date', date('Y-m-d'));
 
-    // Query menggunakan nama kolom yang benar sesuai foto phpMyAdmin kamu
     $orders = \App\Models\Order::whereDate('created_at', $date)
                 ->where('payment_status', 'paid') // Menggunakan 'payment_status' dan 'paid'
                 ->get();
 
-    // Hitung total pendapatan dari data yang sudah difilter
     $totalRevenue = $orders->sum('total_price');
 
     return view('admin.report.index', compact('orders', 'totalRevenue', 'date'));

@@ -177,7 +177,7 @@ class ReservationController extends Controller
         $reservation = Reservation::where('booking_code', $id)->firstOrFail();
 
         // Mengunci aturan expired transaksi Midtrans gantung (15 menit)
-        if ($reservation->status === 'pending' && Carbon::parse($reservation->created_at)->addMinutes(15)->isPast()) {
+        if ($reservation->status === 'pending' && Carbon::parse($reservation->created_at)->addMinutes(1)->isPast()) {
             $reservation->update([
                 'status' => 'cancelled',
                 'payment_status' => 'expire'

@@ -24,14 +24,14 @@
                         {{-- CARD HEADER: Menampilkan ID, Status, Tanggal, & Waktu Masuk Pesanan --}}
                         <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-start {{ strtolower($order->order_status) == 'pending' ? 'bg-yellow-50/50' : 'bg-blue-50/50' }}">
                             <div class="flex flex-col">
-                                <span class="text-sm font-bold text-gray-700">#{{ $order->id }}</span>
+                                <span class="text-sm font-semibold text-gray-900">#{{ $order->id }}</span>
                                 
                                 {{-- INFORMASI TIMESTAMPS: Realtime dari Data Pesanan (Tanpa Animasi) --}}
-                                <div class="flex flex-col mt-1 text-[10px] leading-tight font-sans text-gray-500">
+                                <div class="flex flex-col mt-1 text-xs font-sans text-gray-600">
                                     <span class="font-medium">
                                         {{ $order->created_at->translatedFormat('d F Y') }}
                                     </span>
-                                    <span class="font-bold text-gray-700 mt-0.5">
+                                    <span class="font-semibold text-gray-900 mt-0.5">
                                         {{ $order->created_at->format('H:i') }} WIB
                                     </span>
                                 </div>
@@ -119,7 +119,7 @@
                                         @elseif(strtolower($order->order_status) == 'processing')
                                             <input type="hidden" name="status" value="completed">
                                             <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 rounded shadow-sm transition-colors uppercase tracking-wide">
-                                                Selesaikan & Kosongkan Meja
+                                                Selesai
                                             </button>
                                         @endif
                                     </form>

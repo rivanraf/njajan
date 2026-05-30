@@ -77,7 +77,7 @@
                             @endphp
                             <div class="flex justify-between items-center">
                                 <span class="font-sans font-normal text-sm text-gray-600">Expired in</span>
-                                <div id="countdown-timer" class="font-sans font-medium text-sm text-gray-900" data-expire="{{ $expireTimeIso }}">15:00</div>
+                                <div id="countdown-timer" class="font-sans font-medium text-sm text-gray-900" data-expire="{{ $expireTimeIso }}">Expired</div>
                             </div>
                             <script>
                                 document.addEventListener('DOMContentLoaded', function() {
@@ -167,26 +167,28 @@
     {{-- Snap Script Controller Logic --}}
     <x-slot name="footerScripts">
         <script type="text/javascript">
+            // Menggunakan URL absolut Laravel agar kebal dari kesalahan baca domain di hosting
             const successUrl = "{{ route('reserve.success', $reservation->booking_code) }}";
-            const pendingUrl = window.location.href;
+            const pendingUrl = "{{ url('/reservation/pending') }}/" + "{{ $reservation->booking_code }}";
 
             function triggerSnap() {
                 const snapToken = "{{ $reservation->snap_token }}";
                 
                 if (snapToken) {
+                    // Gunakan window.location.href (tanpa .top) agar tidak diblokir kebijakan Cross-Origin HTTPS hosting
                     window.snap.pay(snapToken, {
                         onSuccess: function(result) {
-                            window.top.location.href = successUrl;
+                            window.location.href = successUrl;
                         },
                         onPending: function(result) {
-                            window.top.location.href = pendingUrl;
+                            window.location.href = pendingUrl;
                         },
                         onError: function(result) {
                             alert("Pembayaran gagal!");
-                            window.top.location.href = pendingUrl;
+                            window.location.href = pendingUrl;
                         },
                         onClose: function() {
-                            window.top.location.href = pendingUrl;
+                            window.location.href = pendingUrl;
                         }
                     });
                 } else {
